@@ -5,6 +5,8 @@ import { sendOTPVericationMail } from "./verificationMail.js";
 import { trycatchHandler } from "../middlewares/trycatchHandler.js";
 import { createUserValidator } from "../middlewares/joiSchemaValidation.js";
 import { loginUserValidator } from "../middlewares/joiSchemaValidation.js";
+import { emailValidator } from "../middlewares/joiSchemaValidation.js";
+import { resetPasswordValidator } from "../middlewares/joiSchemaValidation.js";
 import { createCustomError } from "../errors/customError.js";
 import UserVerification from "../database/model/UserVerification.js";
 import PasswordReset from "../database/model/PasswordReset.js";
@@ -150,6 +152,15 @@ export default class UserController {
 
   // resending verification link
   static resendVericationLink = trycatchHandler(async(req,res, next) => {
+       // Joi validation
+       const {error, value} = await emailValidator.validate(req.body)
+       if(error){
+         console.log(error.details)
+         const err = new Error(error.details[0].message)
+         err.status = 400
+         err.message = error.details[0].message
+         return next(err)
+       }
     const {userId, email} = req.body
     const delAlreadyMail = await UserVerification.deleteMany({userId})
     if(!delAlreadyMail){
@@ -161,6 +172,15 @@ export default class UserController {
 
   //verify OTP Email
   static verifyOTP = trycatchHandler(async(req,res,next) => {
+     // Joi validation
+     const {error, value} = await verifyOTPValidator.validate(req.body)
+     if(error){
+       console.log(error.details)
+       const err = new Error(error.details[0].message)
+       err.status = 400
+       err.message = error.details[0].message
+       return next(err)
+     }
     const {userId, otp} = req.body
     //check if the user OTP exists
     const userOTPverifyID = await OTPVerification.find({userId})
@@ -176,7 +196,7 @@ export default class UserController {
       throw new UnauthorizedError("OTP has expired, please request again")
     }
     //hash valid otp
-    const salt = await bcrypt.genSalt(10)
+    //const salt = await bcrypt.genSalt(10)
     const isMatch = await bcrypt.hash(otp, hashedOTP)
     if(!isMatch){
       throw new UnauthorizedError("Invalid code passed, check again")
@@ -193,14 +213,21 @@ export default class UserController {
 
 //resed otp, if it has expired
 static resendOTPVerification = trycatchHandler(async(req,res,next) => {
+         // Joi validation
+         const {error, value} = await emailValidator.validate(req.body)
+         if(error){
+           console.log(error.details)
+           const err = new Error(error.details[0].message)
+           err.status = 400
+           err.message = error.details[0].message
+           return next(err)
+         }
   const {userId, email } = req.body
   // delete otp in record
   const otpDel = await OTPVerification.deleteMany({userId})
   if(!otpDel){
     throw new BadRequestError("Please resend error occured")
   }
-
-
   //send otp to email
   sendOTPVericationMail({_id:userId,email}, res)
   res.status(201).json({
@@ -212,6 +239,15 @@ static resendOTPVerification = trycatchHandler(async(req,res,next) => {
 
   //request password reset link
   static requestPasswordReset = trycatchHandler(async(req,res,next) => {
+           // Joi validation
+           const {error, value} = await emailValidator.validate(req.body)
+           if(error){
+             console.log(error.details)
+             const err = new Error(error.details[0].message)
+             err.status = 400
+             err.message = error.details[0].message
+             return next(err)
+           }
     const {email, redirectUrl} = req.body
     //check if email exist
     const emailExist = await User.findOne({email})
@@ -229,6 +265,15 @@ static resendOTPVerification = trycatchHandler(async(req,res,next) => {
 
   //reset password
   static resetPassword = trycatchHandler(async(req,res,next) => {
+           // Joi validation
+           const {error, value} = await resetPasswordValidator.validate(req.body)
+           if(error){
+             console.log(error.details)
+             const err = new Error(error.details[0].message)
+             err.status = 400
+             err.message = error.details[0].message
+             return next(err)
+           }
     const {userId, resetString, newPassword} = req.body
     //check if the user exist in db
     const foundResetLink = await PasswordReset.find({userId});

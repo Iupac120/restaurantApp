@@ -9,8 +9,8 @@ import OTPVerification from "../database/model/OTPVerification.js";
 let transporter = await nodemailer.createTransport({
     service:"gmail",
     auth:{
-      user:process.env.AUTH_EMAIL,
-      pass:process.env.AUTH_PASSWORD
+      user:'iupac120@gmail.com',
+      pass:'sdnyevcyrvzptlhd'
     }
   })
 transporter.verify((err,success) => {
