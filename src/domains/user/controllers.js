@@ -148,7 +148,7 @@ export default class UserController {
     sendVerificationEmail({_id:userId, email},res)
   })
 
-  
+
   //verify OTP Email
   static verifyOTP = trycatchHandler(async(req,res,next) => {
     const {userId, otp} = req.body
@@ -172,7 +172,7 @@ export default class UserController {
       throw new UnauthorizedError("Invalid code passed, check again")
     }
     //update valid otp user
-    const updateUser = await User.updateOne({_id:userId},{verified: true})
+    await User.updateOne({_id:userId},{verified: true})
     await OTPVerification.deleteMany({userId})
     res.status(201).json({
       status:"Success",
