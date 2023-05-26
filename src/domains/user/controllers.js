@@ -10,6 +10,7 @@ import UserVerification from "../database/model/UserVerification.js";
 import PasswordReset from "../database/model/PasswordReset.js";
 import BadRequestError from "../errors/badRequestError.js";
 import bcrypt from "bcrypt";
+import { hashData } from "../../util/hashData.js";
 import UnauthorizedError from "../errors/unAuthorizedError.js";
 import OTPVerification from "../database/model/OTPVerification.js";
 
@@ -146,6 +147,8 @@ export default class UserController {
     }
     sendVerificationEmail({_id:userId, email},res)
   })
+
+  
   //verify OTP Email
   static verifyOTP = trycatchHandler(async(req,res,next) => {
     const {userId, otp} = req.body
@@ -159,12 +162,12 @@ export default class UserController {
     const hashedOTP = userOTPverifyID.otp
     if (expiresAt < Date.now()){
       // otp has expired, delete from the record
-      const deleteOTP = await OTPVerification.deleteMany({userId})
+      await OTPVerification.deleteMany({userId})
       throw new UnauthorizedError("OTP has expired, please request again")
     }
     //hash valid otp
-    const salt = await bcrypt.genSalt(10)
-    const isMatch = await bcrypt.hash(otp, hashedOTP)
+    const isMatch = await bcrypt.compare(otp, hashedOTP)
+    
     if(!isMatch){
       throw new UnauthorizedError("Invalid code passed, check again")
     }
