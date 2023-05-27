@@ -62,4 +62,59 @@ UserSchema.methods.comparePassword = async function(candidatePassword){
   const isMatch =  await bcrypt.compare(candidatePassword, this.password);
   return isMatch;
 }
-  export default mongoose.model('User', UserSchema)
+export default mongoose.model('User', UserSchema)
+
+import mongoose from "mongoose";
+
+const UserVerificationSchema = new mongoose.Schema({
+    userId: {
+      type: String,
+    uniqueString: {
+      type: String,
+    },
+    createdAt: {
+      type: Date,
+    },
+    expiresAt:{
+      type: Date,
+    }
+  }
+})
+
+export default mongoose.model('UserVerification', UserVerificationSchema)
+
+import mongoose from "mongoose"
+
+const PasswordResetSchema = new mongoose.Schema({
+    userId: {
+      type: String,
+    resetString: {
+      type: String,
+    },
+    createdAt: {
+      type: Date,
+    },
+    expiresAt:{
+      type: Date,
+    }
+  }
+})
+export default mongoose.model('PasswordReset', PasswordResetSchema)
+import mongoose from "mongoose";
+
+const OTPVerificationSchema = new mongoose.Schema({
+    userId: {
+      type: String,
+    otp: {
+      type: String,
+    },
+    createdAt: {
+      type: Date,
+    },
+    expiresAt:{
+      type: Date,
+    }
+  }
+})
+
+export default mongoose.model('OTPVerification', OTPVerificationSchema)

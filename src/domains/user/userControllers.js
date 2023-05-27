@@ -5,19 +5,21 @@ import { sendOTPVericationMail } from "./verificationMail.js";
 import { trycatchHandler } from "../middlewares/trycatchHandler.js";
 import { createUserValidator } from "../middlewares/joiSchemaValidation.js";
 import { loginUserValidator } from "../middlewares/joiSchemaValidation.js";
+import { emailValidator } from "../middlewares/joiSchemaValidation.js";
+import { resetPasswordValidator } from "../middlewares/joiSchemaValidation.js";
 import { createCustomError } from "../errors/customError.js";
 import UserVerification from "../database/model/UserVerification.js";
 import PasswordReset from "../database/model/PasswordReset.js";
 import BadRequestError from "../errors/badRequestError.js";
 import bcrypt from "bcrypt";
-import { hashData } from "../../util/hashData.js";
 import UnauthorizedError from "../errors/unAuthorizedError.js";
 import OTPVerification from "../database/model/OTPVerification.js";
+import jwt from "jsonwebtoken";
 
 //register a new user
 export default class UserController {
   static createUser = trycatchHandler(async(req, res, next ) => {
-    // Joi validation
+     // Joi validation
     const {error, value} = await createUserValidator.validate(req.body)
     if(error){
       console.log(error.details)
@@ -45,6 +47,8 @@ export default class UserController {
         }
       })
   })
+
+
   //login a rerurning user
   static loginUser = trycatchHandler(async (req, res, next ) => {
     // Joi validation
@@ -66,20 +70,24 @@ export default class UserController {
         if(!isCorrectPassword){
           throw new UnauthorizedError("Incorrect password")
         }
-        //generate jwt token
-        const token = await emailExist.jwtToken()
         sendOTPVericationMail(newUser,res)
         //handle email verification
         sendVerificationEmail(newUser, res)
+          //generate jwt token
+        const accessToken = emailExist.accessJwtToken()
+        const refreshJwt = emailExist.accessJwtToken()
+        await User.updateOne({email},{refreshToken:refreshJwt})
+        res.cookie("jwt",refreshJwt,{httpOnly: true, maxAge:24*60*60*1000})
         res.status(200).json({
         message: "User login successfully",
         status: "Success",
         data:{
           user: emailExist.username,
-          userToken: token
+          userToken: accessToken
         }
       })
   })
+
 
   // get user email link
   static getUserEmailLink = trycatchHandler(async (req, res, next ) => {
@@ -134,12 +142,25 @@ export default class UserController {
       res.status(500).json({message:"Unique string sent"})
   
   })
+
+
   //get a verify email link when error occured 
   static async getUserEmailMsg(req,res,next){
     res.render('verifiedMail')
   }
+
+
   // resending verification link
   static resendVericationLink = trycatchHandler(async(req,res, next) => {
+       // Joi validation
+       const {error, value} = await emailValidator.validate(req.body)
+       if(error){
+         console.log(error.details)
+         const err = new Error(error.details[0].message)
+         err.status = 400
+         err.message = error.details[0].message
+         return next(err)
+       }
     const {userId, email} = req.body
     const delAlreadyMail = await UserVerification.deleteMany({userId})
     if(!delAlreadyMail){
@@ -151,6 +172,15 @@ export default class UserController {
 
   //verify OTP Email
   static verifyOTP = trycatchHandler(async(req,res,next) => {
+     // Joi validation
+     const {error, value} = await verifyOTPValidator.validate(req.body)
+     if(error){
+       console.log(error.details)
+       const err = new Error(error.details[0].message)
+       err.status = 400
+       err.message = error.details[0].message
+       return next(err)
+     }
     const {userId, otp} = req.body
     //check if the user OTP exists
     const userOTPverifyID = await OTPVerification.find({userId})
@@ -162,12 +192,12 @@ export default class UserController {
     const hashedOTP = userOTPverifyID.otp
     if (expiresAt < Date.now()){
       // otp has expired, delete from the record
-      await OTPVerification.deleteMany({userId})
+      const deleteOTP = await OTPVerification.deleteMany({userId})
       throw new UnauthorizedError("OTP has expired, please request again")
     }
     //hash valid otp
-    const isMatch = await bcrypt.compare(otp, hashedOTP)
-    
+    //const salt = await bcrypt.genSalt(10)
+    const isMatch = await bcrypt.hash(otp, hashedOTP)
     if(!isMatch){
       throw new UnauthorizedError("Invalid code passed, check again")
     }
@@ -179,8 +209,19 @@ export default class UserController {
       message:"User email verified successfully"
     })
   })
+
+
 //resed otp, if it has expired
 static resendOTPVerification = trycatchHandler(async(req,res,next) => {
+         // Joi validation
+         const {error, value} = await emailValidator.validate(req.body)
+         if(error){
+           console.log(error.details)
+           const err = new Error(error.details[0].message)
+           err.status = 400
+           err.message = error.details[0].message
+           return next(err)
+         }
   const {userId, email } = req.body
   // delete otp in record
   const otpDel = await OTPVerification.deleteMany({userId})
@@ -198,6 +239,15 @@ static resendOTPVerification = trycatchHandler(async(req,res,next) => {
 
   //request password reset link
   static requestPasswordReset = trycatchHandler(async(req,res,next) => {
+           // Joi validation
+           const {error, value} = await emailValidator.validate(req.body)
+           if(error){
+             console.log(error.details)
+             const err = new Error(error.details[0].message)
+             err.status = 400
+             err.message = error.details[0].message
+             return next(err)
+           }
     const {email, redirectUrl} = req.body
     //check if email exist
     const emailExist = await User.findOne({email})
@@ -212,8 +262,18 @@ static resendOTPVerification = trycatchHandler(async(req,res,next) => {
     sendResetEmail(emailExist, redirectUrl,res)
   })
 
+
   //reset password
   static resetPassword = trycatchHandler(async(req,res,next) => {
+           // Joi validation
+           const {error, value} = await resetPasswordValidator.validate(req.body)
+           if(error){
+             console.log(error.details)
+             const err = new Error(error.details[0].message)
+             err.status = 400
+             err.message = error.details[0].message
+             return next(err)
+           }
     const {userId, resetString, newPassword} = req.body
     //check if the user exist in db
     const foundResetLink = await PasswordReset.find({userId});
@@ -222,7 +282,6 @@ static resendOTPVerification = trycatchHandler(async(req,res,next) => {
     }
     //check if the found reset has not expired
     const {expiresAt} = foundResetLink
-    console.log(expiresAt)
     if (expiresAt < Date.now()){
       await PasswordReset.deleteOne({userId})
       throw new UnauthorizedError("Sorry, your link has expired, press reset button to genearte new one")
@@ -248,5 +307,45 @@ static resendOTPVerification = trycatchHandler(async(req,res,next) => {
     return res.status(201).json({msg:"Password update successful"})
   })
 
+
+  //refresh token handler
+  static async refresh (req,res){
+    //access cookie to cookies
+    const cookies = req.cookies
+    //check if cookies exist
+    if(!cookies?.jwt) return res.sendStatus(401)
+    const refreshTokenCookie = cookies.jwt
+    //find from record the cookie user
+    const foundUser = await User.findOne({refreshToken:refreshTokenCookie})
+    if (!foundUser) return res.sendStatus(403)
+    jwt.verify(refreshTokenCookie,process.env.REFRESH_TOKEN,(err,decoded) => {
+        if(err || foundUser.user !== decoded.username) return res.status(403)
+        const acctoke = foundUser.accessJwtToken()
+        res.status(201).json(acctoke)
+    })
+  }
+
+  //logout controller
+  static async logout (req,res){
+    //on the client delete the access token
+    //access cookie to cookies
+    const cookies = req.cookies
+    //check if cookies exist
+    if(!cookies?.jwt) return res.sendStatus(204) //no content
+    //if there is a cookie in the req
+    const refreshTokenCookie = cookies.jwt
+    //find from db if there is refresh token
+    const foundUser = await User.findOne({refreshToken:refreshTokenCookie})
+    if (!foundUser) {
+      //clear the cookies the cookie though not found in the db
+      res.clearCookie("jwt",{httpOnly: true, maxAge:24*60*60*1000})
+      return res.sendStatus(204) //successful but not content
+    }
+    //delete the refresh token in the db
+    foundUser.refreshToken = ""
+    await foundUser.save()
+    res.clearCookie("jwt",{httpOnly: true, maxAge: 24*60*60*1000})
+    res.sendStatus(204)
+  }
 }
  

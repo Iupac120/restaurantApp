@@ -5,7 +5,16 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import expressLayouts from "express-ejs-layouts";
 const app = express()
-app.use(express.json())
+//app.use(express.json())
+app.use(express.json({
+    //we need the raw body to verify the webhook signature
+    verify: function(req,res, buf){
+        if(req.originalUrl.startsWith('/webhook')){
+            req.rawBody = buf.toString()
+        }
+    }
+}))
+
 app.use(express.urlencoded({extended:false}));
 app.use(expressLayouts)
 app.use(cors());
