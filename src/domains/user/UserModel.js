@@ -25,14 +25,31 @@ const UserSchema = new mongoose.Schema({
       type: String,
       required: true,
     },
-    verified:{
+    isEmailVerified:{
       type: Boolean,
       default: false
     }, 
     refreshToken:String,
-    // emailVerification:String,
-    // otpVerification: String,
-    // passwordReset: String,
+     emailVerificationToken: {
+      type: String,
+      default: null
+     },
+     otpVerificationToken: {
+      type: String,
+      default: null
+     },
+     passwordResetToken: {
+      type: String,
+      default: null
+     },
+     resetPasswordExpires:{
+      type: Date,
+      default: null
+     },
+     resetPasswordCreatedAt:{
+      type: Date,
+      default: null
+     },
     firstName: String,
     lastName: String,
     fullName: String,
@@ -62,59 +79,52 @@ UserSchema.methods.comparePassword = async function(candidatePassword){
   const isMatch =  await bcrypt.compare(candidatePassword, this.password);
   return isMatch;
 }
-export default mongoose.model('User', UserSchema)
 
-import mongoose from "mongoose";
+// const userVerificationSchema = new mongoose.Schema({
+//     userId: {
+//       type: String,
+//     uniqueString: {
+//       type: String,
+//     },
+//     createdAt: {
+//       type: Date,
+//     },
+//     expiresAt:{
+//       type: Date,
+//     }
+//   }
+// })
 
-const UserVerificationSchema = new mongoose.Schema({
-    userId: {
-      type: String,
-    uniqueString: {
-      type: String,
-    },
-    createdAt: {
-      type: Date,
-    },
-    expiresAt:{
-      type: Date,
-    }
-  }
-})
 
-export default mongoose.model('UserVerification', UserVerificationSchema)
+// const passwordResetSchema = new mongoose.Schema({
+//     userId: {
+//       type: String,
+//     resetString: {
+//       type: String,
+//     },
+//     createdAt: {
+//       type: Date,
+//     },
+//     expiresAt:{
+//       type: Date,
+//     }
+//   }
+// })
 
-import mongoose from "mongoose"
 
-const PasswordResetSchema = new mongoose.Schema({
-    userId: {
-      type: String,
-    resetString: {
-      type: String,
-    },
-    createdAt: {
-      type: Date,
-    },
-    expiresAt:{
-      type: Date,
-    }
-  }
-})
-export default mongoose.model('PasswordReset', PasswordResetSchema)
-import mongoose from "mongoose";
+// const oTPVerificationSchema = new mongoose.Schema({
+//     userId: {
+//       type: String,
+//     otp: {
+//       type: String,
+//     },
+//     createdAt: {
+//       type: Date,
+//     },
+//     expiresAt:{
+//       type: Date,
+//     }
+//   }
+// })
 
-const OTPVerificationSchema = new mongoose.Schema({
-    userId: {
-      type: String,
-    otp: {
-      type: String,
-    },
-    createdAt: {
-      type: Date,
-    },
-    expiresAt:{
-      type: Date,
-    }
-  }
-})
-
-export default mongoose.model('OTPVerification', OTPVerificationSchema)
+export default mongoose.model("User", UserSchema)

@@ -21,12 +21,12 @@ app.use(cors());
 app.use(cookieParser)
 
 const PORT = process.env.PORT || 5000
-import connectDB from "./database/connection.js"
-import {router} from "./routes/user.js"
-import { errorHandler } from './middlewares/errorHandler.js';
-import { notFound } from './middlewares/notFound.js';
-app.set("view engine","ejs")
-app.use("/api/v1/mealy", router)
+import connectDB from './src/config/connection.js';
+import {router as userRouter} from "./src/domains/user/userRoutes.js"
+import { errorHandler } from './src/middlewares/errorHandler.js';
+import { notFound } from './src/middlewares/notFound.js';
+
+app.use("/api/v1/mealy",userRouter)
 const start = async() => {
     try {
         await connectDB(process.env.MONGODB_CONNECTION_URL)

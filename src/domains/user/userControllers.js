@@ -1,19 +1,19 @@
-import User from "../database/model/UserModel.js";
-import sendVerificationEmail from "./verificationMail.js";
-import {sendResetEmail} from "./verificationMail.js"
-import { sendOTPVericationMail } from "./verificationMail.js";
-import { trycatchHandler } from "../middlewares/trycatchHandler.js";
-import { createUserValidator } from "../middlewares/joiSchemaValidation.js";
-import { loginUserValidator } from "../middlewares/joiSchemaValidation.js";
-import { emailValidator } from "../middlewares/joiSchemaValidation.js";
-import { resetPasswordValidator } from "../middlewares/joiSchemaValidation.js";
-import { createCustomError } from "../errors/customError.js";
-import UserVerification from "../database/model/UserVerification.js";
-import PasswordReset from "../database/model/PasswordReset.js";
-import BadRequestError from "../errors/badRequestError.js";
+import User from "./UserModel.js";
+import sendVerificationEmail from "../../util/mail.js";
+import {sendResetEmail} from "../../util/mail.js"
+import { sendOTPVericationMail } from "../../util/mail.js";
+import { trycatchHandler } from "../../middlewares/trycatchHandler.js";
+import { createUserValidator } from "../../middlewares/joiSchemaValidation.js";
+import { loginUserValidator } from "../../middlewares/joiSchemaValidation.js";
+import { emailValidator } from "../../middlewares/joiSchemaValidation.js";
+import { resetPasswordValidator } from "../../middlewares/joiSchemaValidation.js";
+import { createCustomError } from "../../errors/customError.js";
+//import UserVerification from "../database/model/UserVerification.js";
+//import PasswordReset from "../database/model/PasswordReset.js";
+import BadRequestError from "../../errors/badRequestError.js";
 import bcrypt from "bcrypt";
-import UnauthorizedError from "../errors/unAuthorizedError.js";
-import OTPVerification from "../database/model/OTPVerification.js";
+import UnauthorizedError from "../../errors/unAuthorizedError.js";
+//import OTPVerification from "../database/model/OTPVerification.js";
 import jwt from "jsonwebtoken";
 
 //register a new user
@@ -93,25 +93,22 @@ export default class UserController {
   static getUserEmailLink = trycatchHandler(async (req, res, next ) => {
     const {userId, uniqueString} = req.params
       //get the user verication mail ID
-      const userExist = await UserVerification.find({userId})
+      //const userExist = await UserVerification.find({userId})
+      const userExist = await User.find({_id:userId})
       //valid userId
-      if(userExist.length > 0){
-        const {expiresAt} = userExist[0];
+      if(userExist){
+        const expiresAt = userExist.resetPasswordExpires;
         //compare if the uniques is valid
-        const hashedUniqueString = userExist[0].uniqueString;
+        const hashedUniqueString = userExist.emailVerificationToken;
         //check for expires time
         if (expiresAt < Date.now()){
           //user verification does not exist
-          const deleteMail = await UserVerification.deleteOne({userId})
+          const deleteMail = await User.updateOne({userId},{
+            emailVerificationToken: undefined,
+            resetPasswordExpires: undefined
+          })
           if (!deleteMail){
             throw new BadRequestError("Clearing user data failed")
-          }else{
-            const deleteUser = await User.deleteOne({_id: userId})
-            if(!deleteUser){
-              throw new BadRequestError("Deleting user fail")
-            }else{
-              res.status(200).json({message:"user successfully deleted"})
-            }
           }
         }else{
             //valid user exist
@@ -121,14 +118,19 @@ export default class UserController {
               throw new UnauthorizedError("Invalid verification passed")
             }else{
               //update user model by changing the verified
-              const verifiedUser = await User.updateOne({_id:userId},{verified: true})
+              const verifiedUser = await User.updateOne({_id:userId},{
+                isEmailVerified: true,
+                emailVerificationToken: undefined,
+                resetPasswordExpires: undefined
+              })
+              await verifiedUser.save()
               if(!verifiedUser){
                 throw new BadRequestError("Failed to update user")
               }else{
-                //delete verification model
-                await UserVerification.deleteOne({userId})
                 //send a html message to the user
-                res.render('verifiedMail')
+                res.status(200).json({
+                  status:"Success"
+                })
               }
             }
         }
@@ -162,7 +164,12 @@ export default class UserController {
          return next(err)
        }
     const {userId, email} = req.body
-    const delAlreadyMail = await UserVerification.deleteMany({userId})
+    const delAlreadyMail = await User.findOneAndUpdate({_id:userId},{
+      emailVerificationToken: undefined,
+      resetPasswordCreatedAt: undefined,
+      resetPasswordExpires: undefined
+    })
+    await delAlreadyMail.save()
     if(!delAlreadyMail){
       throw new BadRequestError("Verification resend error")
     }
@@ -183,16 +190,21 @@ export default class UserController {
      }
     const {userId, otp} = req.body
     //check if the user OTP exists
-    const userOTPverifyID = await OTPVerification.find({userId})
+    const userOTPverifyID = await User.find({_id:userId})
     if (!userOTPverifyID){
       throw new UnauthorizedError("Account is invalid or has been valid already")
     }
     //check if the otp has not expired
-    const {expiresAt} = userOTPverifyID
-    const hashedOTP = userOTPverifyID.otp
+    const expiresAt = userOTPverifyID.resetPasswordExpires
+    const hashedOTP = userOTPverifyID.otpVerificationToken
     if (expiresAt < Date.now()){
       // otp has expired, delete from the record
-      const deleteOTP = await OTPVerification.deleteMany({userId})
+      const deleteOTP = await User.findOneAndUpdate({_id:userId},{
+        resetPasswordExpires:undefined,
+        otpVerificationToken: undefined,
+        resetPasswordCreatedAt: undefined
+      })
+      await deleteOTP.save()
       throw new UnauthorizedError("OTP has expired, please request again")
     }
     //hash valid otp
@@ -202,8 +214,13 @@ export default class UserController {
       throw new UnauthorizedError("Invalid code passed, check again")
     }
     //update valid otp user
-    await User.updateOne({_id:userId},{verified: true})
-    await OTPVerification.deleteMany({userId})
+    await User.updateOne({_id:userId},{
+      isEmailVerified: true,
+      resetPasswordExpires:undefined,
+      otpVerificationToken: undefined,
+      resetPasswordCreatedAt: undefined
+    })
+    await User.save()
     res.status(201).json({
       status:"Success",
       message:"User email verified successfully"
@@ -224,7 +241,12 @@ static resendOTPVerification = trycatchHandler(async(req,res,next) => {
          }
   const {userId, email } = req.body
   // delete otp in record
-  const otpDel = await OTPVerification.deleteMany({userId})
+  const otpDel = await User.findOneAndUpdate({_id:userId},{
+    resetPasswordExpires:undefined,
+    otpVerificationToken: undefined,
+    resetPasswordCreatedAt: undefined
+  })
+  await otpDel.save()
   if(!otpDel){
     throw new BadRequestError("Please resend error occured")
   }
@@ -255,7 +277,7 @@ static resendOTPVerification = trycatchHandler(async(req,res,next) => {
       throw new UnauthorizedError("Invalid email account, please check your email")
     }
     //check if the email is verified
-    if(!emailExist.verified){
+    if(!emailExist.isEmailVerified){
       throw new BadRequestError("The link send to your email is not verified")
     }
     //send a password request url,if verified valid account is found
@@ -276,18 +298,18 @@ static resendOTPVerification = trycatchHandler(async(req,res,next) => {
            }
     const {userId, resetString, newPassword} = req.body
     //check if the user exist in db
-    const foundResetLink = await PasswordReset.find({userId});
+    const foundResetLink = await User.find({_id:userId});
     if (!foundResetLink){
       throw new UnauthorizedError("Checking for exist password reset failed")
     }
     //check if the found reset has not expired
-    const {expiresAt} = foundResetLink
+    const expiresAt = foundResetLink.resetPasswordExpires
     if (expiresAt < Date.now()){
-      await PasswordReset.deleteOne({userId})
+      //await PasswordReset.deleteOne({userId})
       throw new UnauthorizedError("Sorry, your link has expired, press reset button to genearte new one")
     } 
     //reset password record still valid
-    const isMatch = await bcrypt.compare(resetString, PasswordReset.resetString)
+    const isMatch = await bcrypt.compare(resetString, foundResetLink.passwordResetToken)
     if (!isMatch){
       throw new UnauthorizedError("Incorrect password record, try again")
     }
@@ -299,7 +321,11 @@ static resendOTPVerification = trycatchHandler(async(req,res,next) => {
     if (!newPass){
       throw new BadRequestError("Password reset failed, try again later")
     }
-    const deleteOld = await PasswordReset.deleteOne({userId})
+    const deleteOld = await User.findOneAndUpdate({_id:userId},{
+      resetPasswordExpires:undefined,
+      passwordResetToken: undefined,
+      resetPasswordCreatedAt: undefined
+    })
     if (!deleteOld){
       throw new BadRequestError("Error occurred while updating password, try again later")
     }

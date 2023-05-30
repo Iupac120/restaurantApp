@@ -1,17 +1,17 @@
 import nodemailer from "nodemailer";
 import {v4 as uuidv4} from "uuid";
-import UserVerification from "../database/model/UserVerification.js";
-import PasswordReset from "../database/model/PasswordReset.js";
+//import UserVerification from "../database/model/UserVerification.js";
+//import PasswordReset from "../database/model/PasswordReset.js";
 import bcrypt from "bcrypt"
-import { hashData } from "./hashData.js";
-import OTPVerification from "../database/model/OTPVerification.js";
+//import OTPVerification from "../database/model/OTPVerification.js";
+import User from "../domains/user/UserModel.js";
 
 
 let transporter = await nodemailer.createTransport({
     service:"gmail",
     auth:{
-      user:process.env.AUTH_EMAIL,
-      pass:process.env.AUTH_PASSWORD
+      user:'iupac120@gmail.com',
+      pass:'sdnyevcyrvzptlhd'
     }
   })
 transporter.verify((err,success) => {
@@ -36,15 +36,19 @@ export default  async function sendVerificationEmail({_id, email}, res) {
                 <p>This link expires in 3 hours</p><p>Press <a href=${currenturl+"/user/verify/"+_id+"/"+uniqueString}> here  </a>to proceed</p>`
     }
 
-    // const salt = await bcrypt.genSalt(10);
-    // const hashedString = await bcrypt.hash(uniqueString, salt)
-    const hashedString = await hashData(uniqueString)
-    const newverification = new UserVerification({
-        userId: _id,
-        uniqueString: hashedString,
-        createdAt: Date.now(),
-        expiresAt:Date.now() + 10800000
-    })
+    const salt = await bcrypt.genSalt(10);
+    const hashedString = await bcrypt.hash(uniqueString, salt)
+    // const newverification = new UserVerification({
+    //     userId: _id,
+    //     uniqueString: hashedString,
+    //     createdAt: Date.now(),
+    //     expiresAt:Date.now() + 10800000
+    // })
+    const newverification = new User({
+      emailVerificationToken: hashedString,
+      resetPasswordCreatedAt: Date.now(),
+      resetPasswordExpires:Date.now() + 10800000
+  })
     try{
     const newMailId = await newverification.save()
     //if the mail ID failed to save
@@ -52,6 +56,7 @@ export default  async function sendVerificationEmail({_id, email}, res) {
         return res.status(500).json({message:"Verification Email failed"})
     }else {
         const mailer = await transporter.sendMail(mailOptions)
+
         if (!mailer){
             return res.status(401).json({msg:"mail failed"})
         }
@@ -71,7 +76,12 @@ export  const sendResetEmail = async({_id,email},redirectUrl,res) => {
   //generate a random string
   const resetString = uuidv4() + _id
   //delete all existing password reset record
-  const clearDatabase = await PasswordReset.deleteMany({userId:_id})
+  const clearDatabase = await User.findOneAndUpdate({_id},{
+    passwordResetToken: undefined,
+    resetPasswordCreatedAt: undefined,
+    resetPasswordExpires: undefined
+  })
+  await clearDatabase.save()
   if (!clearDatabase){
     return res.status(401).json("Try again later")
   }
@@ -86,16 +96,20 @@ export  const sendResetEmail = async({_id,email},redirectUrl,res) => {
             <p>This link <b> expires in 30 minutes <b>. <p>Press <a href=${redirectUrl +"/"+_id+"/"+resetString}> here </a> to procced.</p></p>`
   };
   //hash the reset string
-//   const salt = await bcrypt.genSalt(10);
-//   const hashedString = await bcrypt.hash(resetString, salt)
-   const hashedString = await hashData(resetString)
+  const salt = await bcrypt.genSalt(10);
+  const hashedString = await bcrypt.hash(resetString, salt)
   //generate a new string to database
-  const newPasswordReset = await new PasswordReset({
-    userId:_id,
-    resetString:hashedString,
-    createdAt:Date.now(),
-    expiresAt:Date.now() + 1800000
-  })
+  // const newPasswordReset = await new PasswordReset({
+  //   userId:_id,
+  //   resetString:hashedString,
+  //   createdAt:Date.now(),
+  //   expiresAt:Date.now() + 1800000
+  // })
+  const newPasswordReset = new User({
+    passwordResetToken: hashedString,
+    resetPasswordCreatedAt: Date.now(),
+    resetPasswordExpires:Date.now() + 1800000
+})
   const newResetLink = await newPasswordReset.save()
   if (!newResetLink){
     return res.status(401).json("Please again later")
@@ -119,14 +133,16 @@ export const sendOTPVericationMail = async({_id,email},res) => {
               <p>This code <b> expires in 30 minutes <b>. <p>`
     };
     //hash the otp
-    // const salt =  await bcrypt.genSalt(10)
-    // const hashOTP = await bcrypt.hash(otp,salt)
-    const hashOTP = await hashData(otp)
+    const salt =  await bcrypt.genSalt(10)
+    const hashOTP = await bcrypt.hash(otp,salt)
     const newOTPverication = await new OTPVerification({
-      userId:_id,
-      otp:hashOTP,
-      createdAt: Date.now(),
-      expiresAt: Date.now()
+      // userId:_id,
+      // otp:hashOTP,
+      // createdAt: Date.now(),
+      // expiresAt: Date.now()
+      otpVerificationToken: hashOTP,
+      resetPasswordCreatedAt: Date.now(),
+      resetPasswordExpires:Date.now() 
     })
     //save the otp in record base
     await newOTPverication.save()

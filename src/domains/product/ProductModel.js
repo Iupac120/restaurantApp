@@ -1,10 +1,23 @@
 import mongoose from "mongoose";
 const Schema = mongoose.Schema
 
-const categorySchema = new Schema({
+const reviewSchema = new Schema({
     name:{
         type: String,
         required:[true,'Please provide a name']
+    },
+    rating:{
+        type: String,
+        required:true 
+    },
+    comment:{
+        type: String,
+        required:[true,'Please provide a comment']
+    },
+    user:{
+        type: mongoose.Schema.Types.ObjectId,
+        required:[true,'Please provide a name'],
+        ref:"User"
     }
 })
 
@@ -13,25 +26,45 @@ const productSchema = new Schema({
         type: String,
         required:true
     },
-    adjective:{
-        type: String,
+    price:{
+        type: Number,
         required:true
     },
+    foodType:{
+        type: String,
+        required: true
+    },
+    reviews:[reviewSchema],
     description:{
         type: String,
         required:true
     },
-    price:{
+    rating:{
         type: String,
         required:true
     },
-    category:{
-        type: String,
-        required:true,
+    discount: {
+        type: Number,
+        default: 0
+      },
+    promoAvailable: {
+        type: Boolean,
+        default: false
+      },
+    serviceAvailable:{
+        type: Boolean,
+        default: false
     },
     imageUrl:{
+        type: [String],
+        required:true,
+    },
+    category:{
         type:String,
-        required: true
+        enum:{
+            values: ["Breakfast","Lunch","Dinner"],
+            message:'{VALUE} is not supported'
+        }
     }
 })
 
