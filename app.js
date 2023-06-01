@@ -23,10 +23,17 @@ app.use(cookieParser)
 const PORT = process.env.PORT || 5000
 import connectDB from './src/config/connection.js';
 import {router as userRouter} from "./src/domains/user/userRoutes.js"
+import {router as productRouter} from "./src/domains/product/productRoutes.js"
+import {router as orderRouter} from "./src/domains/order/orderRoutes.js"
+import {router as cartRouter} from "./src/domains/cart/cartRoutes.js"
 import { errorHandler } from './src/middlewares/errorHandler.js';
 import { notFound } from './src/middlewares/notFound.js';
 
-app.use("/api/v1/mealy",userRouter)
+//API
+app.use("/api/v1/user",userRouter)
+app.use("/api/v1/product",productRouter)
+app.use("/api/v1/order",orderRouter)
+app.use("/api/v1/cart",cartRouter)
 const start = async() => {
     try {
         await connectDB(process.env.MONGODB_CONNECTION_URL)

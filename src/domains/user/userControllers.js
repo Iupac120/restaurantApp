@@ -373,5 +373,89 @@ static resendOTPVerification = trycatchHandler(async(req,res,next) => {
     res.clearCookie("jwt",{httpOnly: true, maxAge: 24*60*60*1000})
     res.sendStatus(204)
   }
+  static async profile (req,res){
+    try {
+      const user = await User.findById(req.user._id)
+      if(user){
+        res.status(200).json({
+          username: user.username,
+          name: user.name,
+          email: user.email,
+          isAdmin: user.isAdmin,
+        })
+      }else{
+        res.status(404).json({message:"Sorry, you data is found, try to register"})
+      }
+    } catch (err) {
+      res.status(404).json({
+        status:"Failed",
+        message:err.message
+      })
+    }
+  }
+  //update user profile
+  static async updateProfile (req,res){
+    try {
+      const user = await User.findById(req.user._id)
+      if(user){
+          user.username = req.body.username || user.username,
+          user.name = req.body.name || user.name,
+          user.email = req.body.email || user.email
+      }
+      if(req.body.password){
+        user.password = req.body.password
+      }
+      const updateUser = await user.save()
+      res.status(200).json({
+        username: updateUser.username,
+        name: updateUser.name,
+        email: updateUser.email,
+        isAdmin: updateUser.isAdmin,
+        token : updateUser.accessJwtToken()
+      })
+    } catch (err) {
+      res.status(404).json({
+        status:"Failed",
+        message:"Sorry, you data is found, try to register"
+      })
+    }
+  }
+
+  //delete user
+  static deleteUser = trycatchHandler(async (req,res,next) => {
+    const user = await User.findByIdAndDelete(req.params.id)
+    if(!user){
+      throw new UnauthorizedError("User not found")
+    }
+    res.status(200).json({
+      status:"success",
+      message:"User has been deleted"
+    })
+  })
+  // admin finds any user
+  static findUser = trycatchHandler(async (req,res,next) => {
+    const user = await User.findById(req.params.id)
+    if(!user){
+      throw new UnauthorizedError("User not found")
+    }
+    const {password, ...others} = user._doc
+    res.status(200).json({
+      status:"success",
+      data:others
+    })
+  })
+
+    // admin finds all users
+    static findAllUser = trycatchHandler(async (req,res,next) => {
+      const users = await User.find({})
+      if(!users){
+        throw new UnauthorizedError("User not found")
+      }
+      const {password, ...others} = users._doc
+      res.status(200).json({
+        status:"success",
+        data:others
+      })
+    })
 }
  

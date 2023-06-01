@@ -5,7 +5,7 @@ const orderSchema = new Schema({
     user:{
         type: mongoose.Schema.Types.ObjectId,
         required: false,
-        red:"User"
+        ref:"User"
     },
     orderItems:{
         name:{type:String, required: true},
@@ -65,7 +65,14 @@ const orderSchema = new Schema({
     deliverdAt:{
         type: Date
     },
-    timestamps: true
-})
+    lat:{
+        type: Number,
+        required: true
+    },
+    long:{
+        type: Number,
+        required: true
+    }
+}, {timestamps: true})
 
 export default mongoose.model("Order", orderSchema)

@@ -1,8 +1,8 @@
-import User from "../database/model/UserModel.mjs";
+import User from "../domains/user/UserModel.js";
 import jwt from "jsonwebtoken";
 import UnauthorizedError from "../errors/unAuthorizedError.js";
 
-export default auth = (req,res,next) => {
+export default async function jwtAuthentication(req,res,next) {
     //check headers
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer')){
@@ -13,7 +13,8 @@ export default auth = (req,res,next) => {
     try {
         //VERIFY jwt credential
         const payload = jwt.verify(token,process.env.ACCESS_TOKEN)
-        req.user = {jwtId: payload._id, name:payload.name}
+        //req.user = {jwtId: payload._id, name:payload.name}
+        req.user = await User.find({_id: payload.userId}).select("-password")
         next()
     } catch (error) {
         throw new UnauthorizedError("Failed credential verfication")

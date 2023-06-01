@@ -1,5 +1,7 @@
 import express from 'express';
 import UserController from "./userControllers.js"
+import jwtAuthentication from '../../middlewares/jwtAuthentication.js';
+import { verifyTokenAndAdmin } from '../../util/verifyTokenAndAdmin.js';
 
 // Setting up our User router
 const router = new express.Router()
@@ -8,6 +10,10 @@ const router = new express.Router()
 router.post("/signup", UserController.createUser)
 // login router
 router.post("/login",UserController.loginUser)
+//user profile
+router.post("/profile",jwtAuthentication,UserController.profile)
+//update profile
+router.put("/Profile/:id",jwtAuthentication,UserController.updateProfile)
 //link router for email
 router.get("/verify/:userId/:uniqueString",UserController.getUserEmailLink)
 // error link router for email
@@ -26,6 +32,12 @@ router.post("/resendOTPVerification", UserController.resendOTPVerification)
 router.post("/refresh", UserController.refresh)
 // logout route
 router.post("/logout",UserController.logout)
+//delete user
+router.delete("/profile/:id", jwtAuthentication,UserController.deleteUser)
+//admin can find any user
+router.get("/find/:id", verifyTokenAndAdmin,UserController.deleteUser)
+//admin can find all users
+router.get("/find", verifyTokenAndAdmin,UserController.deleteUser)
 //Exporting the User Router
 export { router }
 

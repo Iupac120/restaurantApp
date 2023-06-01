@@ -35,6 +35,10 @@ const productSchema = new Schema({
         required: true
     },
     reviews:[reviewSchema],
+    numReview:{
+        type: Number,
+        default: 0
+    },
     description:{
         type: String,
         required:true
