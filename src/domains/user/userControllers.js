@@ -20,6 +20,7 @@ import jwt from "jsonwebtoken";
 export default class UserController {
   static createUser = trycatchHandler(async(req, res, next ) => {
      // Joi validation
+     console.log('hhh')
     const {error, value} = await createUserValidator.validate(req.body)
     if(error){
       console.log(error.details)
@@ -29,15 +30,19 @@ export default class UserController {
       return next(err)
     }
     //check if the user Email already exist in the databse  
+      console.log('kkk')
         const emailExist = await User.findOne({email: req.body.email})
         if (emailExist){
           return next(createCustomError('Email already already, signup with gmail account', 401))
         }
+        console.log('one')
         const newUser = await User.create({...req.body})
         //create jwt token
         const token = await newUser.jwtToken()
+        console.log('two')
         //handle email verification
         sendVerificationEmail(newUser, res)
+        console.log('four')
         res.status(200).json({
         message: "User created successfully",
         status: "Success",
@@ -373,6 +378,8 @@ static resendOTPVerification = trycatchHandler(async(req,res,next) => {
     res.clearCookie("jwt",{httpOnly: true, maxAge: 24*60*60*1000})
     res.sendStatus(204)
   }
+  
+  //user profile
   static async profile (req,res){
     try {
       const user = await User.findById(req.user._id)

@@ -25,7 +25,7 @@ transporter.verify((err,success) => {
  
 //send email verified link
 export default  async function sendVerificationEmail({_id, email}, res) {
-    const currenturl = "http://localhost:5000";
+    const currenturl = "http://localhost:3000";
     const uniqueString = uuidv4() + _id;
     //mail content
     let mailOptions = {
@@ -44,6 +44,7 @@ export default  async function sendVerificationEmail({_id, email}, res) {
     //     createdAt: Date.now(),
     //     expiresAt:Date.now() + 10800000
     // })
+    console.log('three')
     const newverification = new User({
       emailVerificationToken: hashedString,
       resetPasswordCreatedAt: Date.now(),

@@ -4,7 +4,8 @@ import jwtAuthentication from '../../middlewares/jwtAuthentication.js';
 import { verifyTokenAndAdmin } from '../../util/verifyTokenAndAdmin.js';
 
 // Setting up our User router
-const router = new express.Router()
+//const router = new express.Router()
+const router = express.Router()
 
 // User Creation Route
 router.post("/signup", UserController.createUser)
@@ -13,7 +14,7 @@ router.post("/login",UserController.loginUser)
 //user profile
 router.post("/profile",jwtAuthentication,UserController.profile)
 //update profile
-router.put("/Profile/:id",jwtAuthentication,UserController.updateProfile)
+router.put("/Profile/:userId",jwtAuthentication,UserController.updateProfile)
 //link router for email
 router.get("/verify/:userId/:uniqueString",UserController.getUserEmailLink)
 // error link router for email
