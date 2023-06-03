@@ -1,7 +1,6 @@
 {
   "name": "orita",
   "version": "1.0.0",
-  "description": "",
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
@@ -29,5 +28,14 @@
   "devDependencies": {
     "@faker-js/faker": "^8.0.1",
     "nodemon": "^2.0.22"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Iupac120/restaurantApp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Iupac120/restaurantApp/issues"
+  },
+  "homepage": "https://github.com/Iupac120/restaurantApp#readme",
+  "description": ""
 }

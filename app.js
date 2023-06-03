@@ -1,12 +1,22 @@
 dotenv.config()
 import express from 'express';
+const app = express()
 import morgan from 'morgan';
 import dotenv from 'dotenv';
 import cors from "cors";
 import cookieParser from "cookie-parser";
+app.use(express.urlencoded({extended:false}));
+app.use(cors());
 
-const app = express()
+import connectDB from './src/config/connection.js';
+import {router as userRouter} from "./src/domains/user/userRoutes.js"
+import {router as productRouter} from "./src/domains/product/productRoutes.js"
+import {router as orderRouter} from "./src/domains/order/orderRoutes.js"
+import {router as cartRouter} from "./src/domains/cart/cartRoutes.js"
+import { errorHandler } from './src/middlewares/errorHandler.js';
+import { notFound } from './src/middlewares/notFound.js';
 app.use(express.json())
+app.use(morgan('tiny'))
 // app.use(express.json({
 //     //we need the raw body to verify the webhook signature
 //     verify: function(req,res, buf){
@@ -16,25 +26,25 @@ app.use(express.json())
 //     }
 // }))
 
-app.use(express.urlencoded({extended:false}));
-app.use(cors());
-app.use(cookieParser)
-
-const PORT = process.env.PORT || 3000
-import connectDB from './src/config/connection.js';
-import {router as userRouter} from "./src/domains/user/userRoutes.js"
-import {router as productRouter} from "./src/domains/product/productRoutes.js"
-import {router as orderRouter} from "./src/domains/order/orderRoutes.js"
-import {router as cartRouter} from "./src/domains/cart/cartRoutes.js"
-import { errorHandler } from './src/middlewares/errorHandler.js';
-import { notFound } from './src/middlewares/notFound.js';
-
 //API
 app.use('/api/v1/user',userRouter)
 app.use("/api/v1/product",productRouter)
 app.use("/api/v1/order",orderRouter)
 app.use("/api/v1/cart",cartRouter)
+app.post("/api/v1/body",(req,res) => {
+    console.log("body")
+    res.status(200).json({
+        data:req.body
+    })
+})
 
+
+
+
+const PORT = process.env.PORT || 3000
+
+
+app.use(cookieParser)
 const start = async() => {
     try {
         await connectDB(process.env.MONGODB_CONNECTION_URL)
@@ -47,7 +57,7 @@ const start = async() => {
 
 
 //error middlewares
-app.use(morgan('tiny'))
+
 app.use(notFound)
 app.use(errorHandler)
 start()

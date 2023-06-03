@@ -1,4 +1,5 @@
 import User from "./UserModel.js";
+import {v4 as uuidv4} from "uuid";
 import sendVerificationEmail from "../../util/mail.js";
 import {sendResetEmail} from "../../util/mail.js"
 import { sendOTPVericationMail } from "../../util/mail.js";
@@ -8,6 +9,7 @@ import { loginUserValidator } from "../../middlewares/joiSchemaValidation.js";
 import { emailValidator } from "../../middlewares/joiSchemaValidation.js";
 import { resetPasswordValidator } from "../../middlewares/joiSchemaValidation.js";
 import { createCustomError } from "../../errors/customError.js";
+import { verifyOTPValidator } from "../../middlewares/joiSchemaValidation.js";
 //import UserVerification from "../database/model/UserVerification.js";
 //import PasswordReset from "../database/model/PasswordReset.js";
 import BadRequestError from "../../errors/badRequestError.js";
@@ -15,6 +17,10 @@ import bcrypt from "bcrypt";
 import UnauthorizedError from "../../errors/unAuthorizedError.js";
 //import OTPVerification from "../database/model/OTPVerification.js";
 import jwt from "jsonwebtoken";
+import { hashData } from "../../util/hashData.js";
+import {randomString, randomOtp} from "../../util/randomString.js";
+import { UnAuthorizedError } from "../../../../../housemanship/mealyApp2/stutern-mealy-group4-team2/src/errors/error.js";
+
 
 //register a new user
 export default class UserController {
@@ -36,20 +42,31 @@ export default class UserController {
           return next(createCustomError('Email already already, signup with gmail account', 401))
         }
         console.log('one')
-        const newUser = await User.create({...req.body})
-        //create jwt token
-        const token = await newUser.jwtToken()
+        const otp = randomOtp()
+        const uniqueString = randomString();
+        console.log('unique', uniqueString)
+        const hashedString = await hashData(uniqueString)
+        const hashOTP = await hashData(otp)
+        //const newUser = await User.create({...req.body})
+        console.log('uuid', hashedString)
+        const newUser = new User({
+          username:req.body.username,
+          email:req.body.email,
+          password:req.body.password,
+          otpVerificationToken: hashOTP,
+          emailVerificationToken: hashedString,
+          resetPasswordCreatedAt: Date.now(),
+          resetPasswordExpires:Date.now() + 10800000,
+        })
+        await newUser.save()
         console.log('two')
         //handle email verification
-        sendVerificationEmail(newUser, res)
+        await sendVerificationEmail(newUser, res)
+        await sendOTPVericationMail(newUser,otp,res)
         console.log('four')
         res.status(200).json({
-        message: "User created successfully",
         status: "Success",
-        data:{
-          user: newUser.username,
-          userToken: token
-        }
+        message: `Verification token has been seen to ${newUser.email}.`
       })
   })
 
@@ -75,12 +92,11 @@ export default class UserController {
         if(!isCorrectPassword){
           throw new UnauthorizedError("Incorrect password")
         }
-        sendOTPVericationMail(newUser,res)
         //handle email verification
         sendVerificationEmail(newUser, res)
           //generate jwt token
         const accessToken = emailExist.accessJwtToken()
-        const refreshJwt = emailExist.accessJwtToken()
+        const refreshJwt = emailExist.refreshJwtToken()
         await User.updateOne({email},{refreshToken:refreshJwt})
         res.cookie("jwt",refreshJwt,{httpOnly: true, maxAge:24*60*60*1000})
         res.status(200).json({
@@ -195,13 +211,18 @@ export default class UserController {
      }
     const {userId, otp} = req.body
     //check if the user OTP exists
-    const userOTPverifyID = await User.find({_id:userId})
+    const userOTPverifyID = await User.findById({_id:userId})
+    console.log("here",userOTPverifyID)
     if (!userOTPverifyID){
       throw new UnauthorizedError("Account is invalid or has been valid already")
     }
     //check if the otp has not expired
     const expiresAt = userOTPverifyID.resetPasswordExpires
     const hashedOTP = userOTPverifyID.otpVerificationToken
+    console.log("one", hashedOTP)
+    if(userOTPverifyID.isEmailVerified){
+      throw new UnauthorizedError("You have been verified. Please login with your email and password")
+    }
     if (expiresAt < Date.now()){
       // otp has expired, delete from the record
       const deleteOTP = await User.findOneAndUpdate({_id:userId},{
@@ -212,20 +233,22 @@ export default class UserController {
       await deleteOTP.save()
       throw new UnauthorizedError("OTP has expired, please request again")
     }
+    console.log("two")
     //hash valid otp
     //const salt = await bcrypt.genSalt(10)
-    const isMatch = await bcrypt.hash(otp, hashedOTP)
-    if(!isMatch){
+    if (otp !== hashedOTP){
       throw new UnauthorizedError("Invalid code passed, check again")
     }
     //update valid otp user
-    await User.updateOne({_id:userId},{
+    const user = await User.updateOne({_id:userId},{
       isEmailVerified: true,
       resetPasswordExpires:undefined,
       otpVerificationToken: undefined,
       resetPasswordCreatedAt: undefined
     })
-    await User.save()
+    console.log("three")
+    await user.save()
+    console.log("five")
     res.status(201).json({
       status:"Success",
       message:"User email verified successfully"
@@ -244,19 +267,20 @@ static resendOTPVerification = trycatchHandler(async(req,res,next) => {
            err.message = error.details[0].message
            return next(err)
          }
-  const {userId, email } = req.body
+  const {email} = req.body
   // delete otp in record
-  const otpDel = await User.findOneAndUpdate({_id:userId},{
-    resetPasswordExpires:undefined,
-    otpVerificationToken: undefined,
-    resetPasswordCreatedAt: undefined
-  })
-  await otpDel.save()
+  const otpDel = await User.findOne({email:email})
   if(!otpDel){
-    throw new BadRequestError("Please resend error occured")
+    throw new BadRequestError("Please resend, cannot find your ID")
   }
+  const otp = randomOtp()
+  const hashOtp = await hashData(otp)
+  otpDel.resetPasswordExpires = Date.now() + 10800000
+  otpDel.otpVerificationToken = hashOtp
+  otpDel.resetPasswordCreatedAt = Date.now()
+  await otpDel.save()
   //send otp to email
-  sendOTPVericationMail({_id:userId,email}, res)
+  await sendOTPVericationMail(otpDel,otp, res)
   res.status(201).json({
     status:"Success",
     message:"Check your mail for new code"

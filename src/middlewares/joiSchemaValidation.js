@@ -38,9 +38,13 @@ export const createUserValidator = Joi.object({
       'string.pattern.base': 'Email is not a valid email format/address',
     })
   }).strict()
+  
   export const verifyOTPValidator = Joi.object({
-    otp: Joi.number().required().messages({
-      'string.pattern.base': 'Email is not a valid otp format/address',
+    otp: Joi.string().required().messages({
+      'string.pattern.base': 'Otp is not valid format/address',
+    }),
+    userId: Joi.string().required().messages({
+      'string.pattern.base': 'User ID is not a valid ID format/address',
     })
   }).strict()
   export const resetPasswordValidator = Joi.object({

@@ -26,9 +26,9 @@ router.post("/resetPassword",UserController.resetPassword)
 //resend email verification
 router.post("/resendVerificationLink",UserController.resendVericationLink)
 //otp verification route
-router.post("/verifyOTP",UserController.verifyOTP)
+router.post("/verify_otp",UserController.verifyOTP)
 //resend otp verification after expiration
-router.post("/resendOTPVerification", UserController.resendOTPVerification)
+router.post("/resend_otp_verification", UserController.resendOTPVerification)
 // refresh route
 router.post("/refresh", UserController.refresh)
 // logout route
