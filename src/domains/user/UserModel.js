@@ -31,7 +31,10 @@ const UserSchema = new mongoose.Schema({
       type: Boolean,
       default: false
     },
-    refreshToken:String,
+    refreshToken:{
+      type: String,
+      default: null
+    },
      emailVerificationToken: {
       type: String,
       default: null
@@ -64,11 +67,11 @@ const UserSchema = new mongoose.Schema({
     next()
   })
 
-  UserSchema.pre('save', async function(next){
-    const salt = await bcrypt.genSalt(10)
-    this.password = await bcrypt.hash(this.password, salt)
-    next()
-})
+// UserSchema.pre('save', async function(next){
+//     const salt = await bcrypt.genSalt(10)
+//     this.password = await bcrypt.hash(this.password, salt)
+//     next()
+// })
 UserSchema.methods.accessJwtToken = function (){
 return jwt.sign({userId:this._id, username:this.username},process.env.ACCESS_TOKEN,{expiresIn:process.env.ACCESS_LIFETIME})
 } 
@@ -82,51 +85,5 @@ UserSchema.methods.comparePassword = async function(candidatePassword){
   return isMatch;
 }
 
-// const userVerificationSchema = new mongoose.Schema({
-//     userId: {
-//       type: String,
-//     uniqueString: {
-//       type: String,
-//     },
-//     createdAt: {
-//       type: Date,
-//     },
-//     expiresAt:{
-//       type: Date,
-//     }
-//   }
-// })
-
-
-// const passwordResetSchema = new mongoose.Schema({
-//     userId: {
-//       type: String,
-//     resetString: {
-//       type: String,
-//     },
-//     createdAt: {
-//       type: Date,
-//     },
-//     expiresAt:{
-//       type: Date,
-//     }
-//   }
-// })
-
-
-// const oTPVerificationSchema = new mongoose.Schema({
-//     userId: {
-//       type: String,
-//     otp: {
-//       type: String,
-//     },
-//     createdAt: {
-//       type: Date,
-//     },
-//     expiresAt:{
-//       type: Date,
-//     }
-//   }
-// })
 
 export default mongoose.model("User", UserSchema)

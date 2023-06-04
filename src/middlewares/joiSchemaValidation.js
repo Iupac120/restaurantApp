@@ -42,17 +42,14 @@ export const createUserValidator = Joi.object({
   export const verifyOTPValidator = Joi.object({
     otp: Joi.string().required().messages({
       'string.pattern.base': 'Otp is not valid format/address',
-    }),
-    userId: Joi.string().required().messages({
-      'string.pattern.base': 'User ID is not a valid ID format/address',
     })
   }).strict()
   export const resetPasswordValidator = Joi.object({
-    password: Joi.string().regex(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,}$/)
+    newPassword: Joi.string().regex(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,}$/)
     .required()
     .messages({
       'string.pattern.base': 'You need one number, one alphanumeric character and one in caps, password be more than 7 characters long',
     }),
-    confirmPassword: Joi.string().valid(Joi.ref('password')).required().messages({'string.pattern.base':'You need to confirm your password'}),
+    confirmPassword: Joi.string().valid(Joi.ref('newPassword')).required().messages({'string.pattern.base':'You need to confirm your password'}),
     
   }).strict()

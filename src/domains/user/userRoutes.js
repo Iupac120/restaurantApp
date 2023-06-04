@@ -12,7 +12,7 @@ router.post("/signup", UserController.createUser)
 // login router
 router.post("/login",UserController.loginUser)
 //user profile
-router.post("/profile",jwtAuthentication,UserController.profile)
+router.get("/profile",jwtAuthentication,UserController.profile)
 //update profile
 router.put("/Profile/:userId",jwtAuthentication,UserController.updateProfile)
 //link router for email
@@ -22,17 +22,17 @@ router.get("/verified",UserController.getUserEmailMsg)
 //request password reset router
 router.post("/requestPasswordReset",UserController.requestPasswordReset)
 // reset password
-router.post("/resetPassword",UserController.resetPassword)
+router.post("/resetPassword/:userId/:resetString",UserController.resetPassword)
 //resend email verification
 router.post("/resendVerificationLink",UserController.resendVericationLink)
 //otp verification route
-router.post("/verify_otp",UserController.verifyOTP)
+router.post("/verify_otp/:userId",UserController.verifyOTP)
 //resend otp verification after expiration
 router.post("/resend_otp_verification", UserController.resendOTPVerification)
 // refresh route
-router.post("/refresh", UserController.refresh)
+router.get("/refresh", UserController.refresh)
 // logout route
-router.post("/logout",UserController.logout)
+router.get("/logout",UserController.logout)
 //delete user
 router.delete("/profile/:id", jwtAuthentication,UserController.deleteUser)
 //admin can find any user

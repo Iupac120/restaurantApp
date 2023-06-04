@@ -27,9 +27,7 @@ const currenturl = "http://localhost:3000";
 
  
 //send email verified link
-export default  async function sendVerificationEmail({_id, email, emailVerificationToken}, res) {
-  //unique string
-  const uniqueString = emailVerificationToken
+export default  async function sendVerificationEmail({_id, email},uniqueString,res) {
     //mail content
     let mailOptions = {
         from: process.env.AUTH_EMAIL,
@@ -50,20 +48,7 @@ export default  async function sendVerificationEmail({_id, email, emailVerificat
 
 
 //send password reset email
-export  const sendResetEmail = async({_id,email},redirectUrl,res) => {
-  //generate a random string
-  const resetString = randomString()
-  //delete all existing password reset record
-  const clearDatabase = await User.findOneAndUpdate({_id},{
-    passwordResetToken: undefined,
-    resetPasswordCreatedAt: undefined,
-    resetPasswordExpires: undefined
-  })
-  await clearDatabase.save()
-  if (!clearDatabase){
-    return res.status(401).json("Try again later")
-  }
-  //delete record send successfully
+export  const sendResetEmail = async({_id,email},resetString,res) => {
   //Now send the email
   // mail message
   const mailOptions = {
@@ -71,33 +56,14 @@ export  const sendResetEmail = async({_id,email},redirectUrl,res) => {
     to:email,//should a dynamic html for multiple messages
     subject:"Password Reset",
     html:`<p>We heard that you lost your password.</p><p>Don't worry, use the below link to reset it.</p>
-            <p>This link <b> expires in 30 minutes <b>. <p>Press <a href=${redirectUrl +"/"+_id+"/"+resetString}> here </a> to procced.</p></p>`
+            <p>This link <b> expires in 30 minutes <b>. <p>Press <a href=${currenturl +"/"+_id+"/"+resetString}> here </a> to procced.</p></p>`
   };
-  //hash the reset string
-  const salt = await bcrypt.genSalt(10);
-  const hashedString = await bcrypt.hash(resetString, salt)
-  //generate a new string to database
-  // const newPasswordReset = await new PasswordReset({
-  //   userId:_id,
-  //   resetString:hashedString,
-  //   createdAt:Date.now(),
-  //   expiresAt:Date.now() + 1800000
-  // })
-  const newPasswordReset = new User({
-    passwordResetToken: hashedString,
-    resetPasswordCreatedAt: Date.now(),
-    resetPasswordExpires:Date.now() + 1800000
-})
-  const newResetLink = await newPasswordReset.save()
-  if (!newResetLink){
-    return res.status(401).json("Please again later")
-  }
+
   const mailer = transporter.sendMail(mailOptions)
   if (!mailer){
     return res.status(401).json({msg:"Failed to send email"})
   }
-  //email sent successfully
-  return res.status(201).json({message:"Email sent successfully"})
+
 }
 
 export const sendOTPVericationMail = async({_id,email},otp,res) => {
