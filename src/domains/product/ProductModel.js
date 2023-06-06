@@ -86,7 +86,21 @@ const productSchema = new Schema({
         default: false
     }
 },{
-    timestamp:true
+    timestamps:true
 })
+
+productSchema.methods.discountPrice = function(/*discountValue*/){
+    const originalPrice = this.name.reduce((total,restaurant) => {
+        const restaurantPrice = restaurant.food.reduce((subtotal, foodItem) => {
+            return subtotal + foodItem.price
+        })
+        return total + restaurantPrice
+    }, 0)
+    const discountAmount = (this.discount/100)*originalPrice
+    const discountedPrice = originalPrice - discountAmount
+    return parseFloat(discountedPrice.toFixed(2))
+    this.discount = discountValue
+    return this.save()
+}
 
 export default mongoose.model("Product",productSchema)

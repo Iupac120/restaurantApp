@@ -12,14 +12,16 @@ router.get("/search",ProductController.searchProduct)
 router.get("/getProductCategories", ProductController.getProductbyCategories)
 //get available product
 router.get("/availableProduct", ProductController.AvailableProduct)
+//get promotion available
+router.get("/promo", ProductController.promo)
 //get discount product
-router.post("/createDiscount", ProductController.discountPrice)
+router.post("/create_discount", ProductController.discountPrice)
 //get product
-router.get("/:id", ProductController.getSingleProduct)
+router.get("/:productId", ProductController.getSingleProduct)
 //update product
-router.put("/product/:id",verifyTokenAndAdmin, ProductController.updateProduct)
+router.put("/:productId",verifyTokenAndAdmin, ProductController.updateProduct)
 //delete product
-router.delete("/product/:id",verifyTokenAndAdmin, ProductController.updateProduct)
+router.delete("/:productId",verifyTokenAndAdmin, ProductController.deleteProduct)
 //create new product
 router.post("/",ProductController.createProduct)
 //create a product review

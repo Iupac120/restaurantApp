@@ -23,9 +23,9 @@ export default class ProductController{
 
     //get single product
     static async getSingleProduct (req,res){
-        const {id} = req.params
+        const {productId} = req.params
         try {
-            const product = await Product.find({_id:id})
+            const product = await Product.find({_id:productId})
             if(!product){
                 throw new BadRequestError("Sorry, we dont have meal again. Check back later")
             }
@@ -61,26 +61,52 @@ export default class ProductController{
     //Get all availabe product
     static async AvailableProduct (req,res) {
         try{
-        const product = await Product.find({}).select(serviceAvailable === true)
+        const product = await Product.find({})
+        const newPro = product.find((prod) =>{
+            return prod.featured === true
+        })
         if(!product){
             throw new BadRequestError("This meal is not available")
         }
         res.status(200).json({
             status:"Success",
-            data: product
+            data: newPro
         })
     }catch(err){
         res.status(500).json({message:err.message})
     }
     }
+    
+    //select promotion offer
+        static async promo (req,res) {
+            try{
+            const product = await Product.find({})
+            if(!product){
+                throw new BadRequestError("This meal is not available")
+            }
+            const newPro = product.filter((prod) =>{
+                return prod.promoAvailable === true
+            })
+            if(!newPro || newPro.length === 0){
+                throw new BadRequestError("We don't have promotion for now")
+            }
+            res.status(200).json({
+                status:"Success",
+                data: newPro
+            })
+        }catch(err){
+            res.status(500).json({message:err.message})
+        }
+        }
 
     //search for a product
-    // static searchProduct = trycatchHandler(async(req,res,next) => {
+    // static async searchProduct (req,res) {
+    //     try{
     //     const pageSize = 3;
     //     const page = Number(req.query.pageNumber) || 1
-    //     const search = req.query.search?{
+    //     const search = req.query.name?{
     //         name:{
-    //             $regex: req.query.search,
+    //             $regex: req.query.name.restaurant,
     //             $options:'i'
     //         },
     //     }
@@ -94,26 +120,36 @@ export default class ProductController{
     //         status:"Success",
     //         data: products,page, pages:Math.ceil(counts/pageSize)
     //     })
-    // })
+    // }catch(err){
+    //     res.status(500).json(err.message)
+    // }
+    // }
+
     //search for a product
     static async  searchProduct (req,res){
         try {
-            const {promoAvailable, category, name, discount} = req.query
+            const {restaurant, food, drink} = req.query
             const queryObject = {}
-            if (promoAvailable){
-                queryObject.promoAvailable = promoAvailable === 'true'? true: false
+            // if (promoAvailable){
+            //     queryObject.promoAvailable = promoAvailable === 'true'? true: false
+            // }
+            // if(category){
+            //     queryObject.category = category
+            // }
+            if(restaurant){
+                queryObject['name.restaurant'] = {$regex: restaurant, $options: 'i'}
             }
-            if(category){
-                queryObject.category = category
+            if(food){
+                queryObject['name.food.name'] = {$regex: food, $options: 'i'}
             }
-            if(name){
-                queryObject.name = {$regex: name, $options: 'i'}
+            if(drink){
+                queryObject['name.drink.name'] = {$regex: drink, $options: 'i'}
             }
-            if(discount){
-                queryObject.discount = discount
-            }
+            // if(discount){
+            //     queryObject.discount = discount
+            // }
             const product = await Product.find(queryObject)
-            if(!product){
+            if(!product || product.length === 0){
                 throw new BadRequestError("Product not found")
             }
             res.status(200).json({
@@ -121,9 +157,11 @@ export default class ProductController{
                 data:product
             })
         } catch (err) {
-            res.status(401).json({msg:"Failed to get product"})
+            res.status(500).json({msg:err.message})
         }
     }
+
+    //calculate discount
     static async discountPrice (req,res){
         try{
         const {discount, originalPrice} = req.body
@@ -165,7 +203,8 @@ export default class ProductController{
     //update product
     static async updateProduct (req,res) {
         try{
-        const newProduct = await Product.findByIdAndUpdate(req.params.id,{
+            console.log("one")
+        const newProduct = await Product.findByIdAndUpdate(req.params.productId,{
             $set:req.body
         },{
             new: true,

@@ -26,7 +26,6 @@ import {randomString, randomOtp} from "../../util/randomString.js";
 export default class UserController {
   static createUser = trycatchHandler(async(req, res, next ) => {
      // Joi validation
-     console.log('hhh')
     const {error, value} = await createUserValidator.validate(req.body)
     if(error){
       // console.log(error.details)
@@ -72,7 +71,7 @@ export default class UserController {
 
 
   //login a rerurning user
-  static loginUser = trycatchHandler(async (req, res, next ) => {
+  static async loginUser (req, res){
     // Joi validation
     const {error, value} = await loginUserValidator.validate(req.body)
     if(error){
@@ -83,6 +82,7 @@ export default class UserController {
       // return next(err)
       res.status(400).json(error.message)
     }
+    try{
     const {email,password} = req.body
       // check if the email exist
         const emailExist = await User.findOne({email})
@@ -106,7 +106,10 @@ export default class UserController {
           userToken: accessToken
         }
       })
-  })
+    }catch(err){
+      res.status(500).json({message:err.message})
+    }
+  }
 
 
   //get user email link to verify
