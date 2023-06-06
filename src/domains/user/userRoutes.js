@@ -34,7 +34,7 @@ router.get("/refresh", UserController.refresh)
 // logout route
 router.get("/logout",UserController.logout)
 //delete user
-router.delete("/profile/:id", jwtAuthentication,UserController.deleteUser)
+router.delete("/profile/:userId", jwtAuthentication,UserController.deleteUser)
 //admin can find any user
 router.get("/find/:id", verifyTokenAndAdmin,UserController.deleteUser)
 //admin can find all users

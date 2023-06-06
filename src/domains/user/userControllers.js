@@ -29,11 +29,12 @@ export default class UserController {
      console.log('hhh')
     const {error, value} = await createUserValidator.validate(req.body)
     if(error){
-      console.log(error.details)
-      const err = new Error(error.details[0].message)
-      err.status = 400
-      err.message = error.details[0].message
-      return next(err)
+      // console.log(error.details)
+      // const err = new Error(error.details[0].message)
+      // err.status = 400
+      // err.message = error.details[0].message
+      // return next(err)
+      res.status(400).json(error.message)
     }
     const {username,password,email,firstName,lastName} = req.body
     //check if the user Email already exist in the databse  
@@ -59,9 +60,7 @@ export default class UserController {
           resetPasswordCreatedAt: Date.now(),
           resetPasswordExpires:Date.now() + 10800000
         })
-        console.log('one', newUser)
         await newUser.save()
-        console.log('one')
         //handle email verification
         await sendVerificationEmail(newUser,uniqueString,res)
         await sendOTPVericationMail(newUser,otp,res)
@@ -77,11 +76,12 @@ export default class UserController {
     // Joi validation
     const {error, value} = await loginUserValidator.validate(req.body)
     if(error){
-      console.log(error.details)
-      const err = new Error(error.details[0].message)
-      err.status = 400
-      err.message = error.details[0].message
-      return next(err)
+      // console.log(error.details)
+      // const err = new Error(error.details[0].message)
+      // err.status = 400
+      // err.message = error.details[0].message
+      // return next(err)
+      res.status(400).json(error.message)
     }
     const {email,password} = req.body
       // check if the email exist
@@ -166,11 +166,12 @@ export default class UserController {
        // Joi validation
        const {error, value} = await emailValidator.validate(req.body)
        if(error){
-         console.log(error.details)
-         const err = new Error(error.details[0].message)
-         err.status = 400
-         err.message = error.details[0].message
-         return next(err)
+        //  console.log(error.details)
+        //  const err = new Error(error.details[0].message)
+        //  err.status = 400
+        //  err.message = error.details[0].message
+        //  return next(err)
+        res.status(400).json(error.message)
        }
     const {email} = req.body
     const delAlreadyMail = await User.findOne({email}).exec()
@@ -197,11 +198,12 @@ export default class UserController {
     
      const {error, value} = await verifyOTPValidator.validate(req.body)
      if(error){
-       console.log(error.details)
-       const err = new Error(error.details[0].message)
-       err.status = 400
-       err.message = error.details[0].message
-       return next(err)
+      //  console.log(error.details)
+      //  const err = new Error(error.details[0].message)
+      //  err.status = 400
+      //  err.message = error.details[0].message
+      //  return next(err)
+      res.status(400).json(error.message)
      }
      try{
     const {params:{userId},body:{otp}} = req
@@ -253,11 +255,12 @@ static resendOTPVerification = trycatchHandler(async(req,res,next) => {
          // Joi validation
          const {error, value} = await emailValidator.validate(req.body)
          if(error){
-           console.log(error.details)
-           const err = new Error(error.details[0].message)
-           err.status = 400
-           err.message = error.details[0].message
-           return next(err)
+          //  console.log(error.details)
+          //  const err = new Error(error.details[0].message)
+          //  err.status = 400
+          //  err.message = error.details[0].message
+          //  return next(err)
+          res.status(400).json(error.message)
          }
   const {email} = req.body
   // delete otp in record
@@ -285,11 +288,12 @@ static resendOTPVerification = trycatchHandler(async(req,res,next) => {
            // Joi validation
            const {error, value} = await emailValidator.validate(req.body)
            if(error){
-             console.log(error.details)
-             const err = new Error(error.details[0].message)
-             err.status = 400
-             err.message = error.details[0].message
-             return next(err)
+            //  console.log(error.details)
+            //  const err = new Error(error.details[0].message)
+            //  err.status = 400
+            //  err.message = error.details[0].message
+            //  return next(err)
+            res.status(400).json(error.message)
            }
     const {email} = req.body
     //check if email exist
@@ -320,11 +324,12 @@ static resendOTPVerification = trycatchHandler(async(req,res,next) => {
            // Joi validation
            const {error, value} = await resetPasswordValidator.validate(req.body)
            if(error){
-             console.log(error.details)
-             const err = new Error(error.details[0].message)
-             err.status = 400
-             err.message = error.details[0].message
-             return next(err)
+            //  console.log(error.details)
+            //  const err = new Error(error.details[0].message)
+            //  err.status = 400
+            //  err.message = error.details[0].message
+            //  return next(err)
+            res.status(400).json(error.message)
            }
     const {params:{userId, resetString},body:{newPassword}} = req
     //check if the user exist in db
@@ -359,7 +364,7 @@ static resendOTPVerification = trycatchHandler(async(req,res,next) => {
   //refresh token handler
   static async refresh (req,res){
     //access cookie to cookies
-    const cookies = req.cookies
+    const cookies = req.Cookies
     //check if cookies exist
     console.log("one", cookies)
     if(!cookies?.jwt) return res.sendStatus(401)
@@ -380,7 +385,7 @@ static resendOTPVerification = trycatchHandler(async(req,res,next) => {
   static async logout (req,res){
     //on the client delete the access token
     //access cookie to cookies
-    const cookies = req.cookies
+    const cookies = req.Cookies
     //check if cookies exist
     console.log("aaa")
     if(!cookies?.jwt) return res.sendStatus(204) //no content
@@ -400,14 +405,13 @@ static resendOTPVerification = trycatchHandler(async(req,res,next) => {
     foundUser.refreshToken = ""
     await foundUser.save()
     res.clearCookie("jwt",{httpOnly: true, maxAge: 24*60*60*1000})
-    res.send(204).json({message:"You have logged out"})
+    res.send(204).json({message:"You have been logged out"})
   }
   
   //user profile
   static async profile (req,res){
     try {
-      const user = await User.findById({_id:req.user._id})
-      console.log("prof",user)
+      const user = await User.findById({_id:req.user.jwtId})
       if(user){
         res.status(200).json({
           username: user.username,
@@ -428,34 +432,38 @@ static resendOTPVerification = trycatchHandler(async(req,res,next) => {
   //update user profile
   static async updateProfile (req,res){
     try {
-      const user = await User.findById(req.user._id)
-      if(user){
-          user.username = req.body.username || user.username,
-          user.name = req.body.name || user.name,
-          user.email = req.body.email || user.email
-      }
-      if(req.body.password){
-        user.password = req.body.password
-      }
-      const updateUser = await user.save()
+      const user = await User.findByIdAndUpdate({_id:req.params.userId},{$set:req.body},{
+        new: true,
+        runValidators: true
+      })
+      // if(user){
+      //     user.username = req.body.username || user.username,
+      //     user.name = req.body.name || user.name,
+      //     user.email = req.body.email || user.email
+      // }
+      // if(req.body.password){
+      //   user.password = req.body.password
+      // }
+      // const updateUser = await user.save()
       res.status(200).json({
-        username: updateUser.username,
-        name: updateUser.name,
-        email: updateUser.email,
-        isAdmin: updateUser.isAdmin,
-        token : updateUser.accessJwtToken()
+        username: user.username,
+        name: user.name,
+        email: user.email,
+        isAdmin: user.isAdmin,
+        token : user.accessJwtToken()
       })
     } catch (err) {
       res.status(404).json({
         status:"Failed",
-        message:"Sorry, you data is found, try to register"
+        message:err.message
       })
     }
   }
 
   //delete user
-  static deleteUser = trycatchHandler(async (req,res,next) => {
-    const user = await User.findByIdAndDelete(req.params.id)
+  static async deleteUser (req,res){
+    try{
+    const user = await User.findByIdAndDelete(req.params.userId)
     if(!user){
       throw new UnauthorizedError("User not found")
     }
@@ -463,9 +471,13 @@ static resendOTPVerification = trycatchHandler(async(req,res,next) => {
       status:"success",
       message:"User has been deleted"
     })
-  })
+  }catch(err){
+    res.status(500).json({message:err.message})
+  }
+  }
   // admin finds any user
-  static findUser = trycatchHandler(async (req,res,next) => {
+  static async findUser (req,res){
+    try{
     const user = await User.findById(req.params.id)
     if(!user){
       throw new UnauthorizedError("User not found")
@@ -475,10 +487,14 @@ static resendOTPVerification = trycatchHandler(async(req,res,next) => {
       status:"success",
       data:others
     })
-  })
+  }catch(err){
+    res.status(500).json({message:err.message})
+  }
+  }
 
     // admin finds all users
-    static findAllUser = trycatchHandler(async (req,res,next) => {
+    static async findAllUser (req,res){
+      try{
       const users = await User.find({})
       if(!users){
         throw new UnauthorizedError("User not found")
@@ -488,6 +504,9 @@ static resendOTPVerification = trycatchHandler(async(req,res,next) => {
         status:"success",
         data:others
       })
-    })
+    }catch(err){
+      res.status(500).json({message:err.message})
+    }
+    }
 }
  

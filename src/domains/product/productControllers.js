@@ -6,7 +6,8 @@ import UnauthorizedError from "../../errors/unAuthorizedError.js";
 
 export default class ProductController{
     //get all products
-    static getAllProduct = trycatchHandler(async(req,res) =>{
+    static async getAllProduct (req,res) {
+        try{
         const product = await Product.find({})
         if(!product){
             throw new BadRequestError("Sorry, we dont have any product")
@@ -15,23 +16,31 @@ export default class ProductController{
             status:"Success",
             data:product
         })
-    })
+    }catch(err){
+        res.status(500).json({message:err.message})
+    }
+    }
 
     //get single product
-    static getSingleProduct = trycatchHandler(async(req,res) =>{
+    static async getSingleProduct (req,res){
         const {id} = req.params
-        const product = await Product.find({_id:id})
-        if(!product){
-            throw new BadRequestError("Sorry, we dont have meal again. Check back later")
+        try {
+            const product = await Product.find({_id:id})
+            if(!product){
+                throw new BadRequestError("Sorry, we dont have meal again. Check back later")
+            }
+            res.status(200).json({
+                status:"Success",
+                data:product
+         })
+        } catch (err) {
+            res.status(500).json({message:err.message})
         }
-        res.status(200).json({
-            status:"Success",
-            data:product
-        })
-    })
+    }
 
     //get product by categories
-    static getProductbyCategories = trycatchHandler(async(req,res) => {
+    static async getProductbyCategories (req,res) {
+        try{
         const product = await Product.aggregate([
             {$match: {}},
             {$group: {
@@ -44,8 +53,14 @@ export default class ProductController{
             status:"Sucess",
             data:product
         })
-    })
-    static AvailableProduct = trycatchHandler(async(req,res,next) => {
+    }catch(err){
+        res.status(500).json({message:err.message})
+    }
+    }
+
+    //Get all availabe product
+    static async AvailableProduct (req,res) {
+        try{
         const product = await Product.find({}).select(serviceAvailable === true)
         if(!product){
             throw new BadRequestError("This meal is not available")
@@ -54,7 +69,11 @@ export default class ProductController{
             status:"Success",
             data: product
         })
-    })
+    }catch(err){
+        res.status(500).json({message:err.message})
+    }
+    }
+
     //search for a product
     // static searchProduct = trycatchHandler(async(req,res,next) => {
     //     const pageSize = 3;
@@ -105,7 +124,8 @@ export default class ProductController{
             res.status(401).json({msg:"Failed to get product"})
         }
     }
-    static discountPrice = trycatchHandler(async(req,res,net) => {
+    static async discountPrice (req,res){
+        try{
         const {discount, originalPrice} = req.body
         const discountPercent = discount/100
         const totalPrice = originalPrice - (originalPrice*discountPercent)
@@ -120,10 +140,16 @@ export default class ProductController{
             status:"Success",
             data:price
         })
-    }) 
+    }catch(err){
+        res.status(500).json({message:err.message})
+    }
+    }
     //create product
-    static createProduct = trycatchHandler(async (req,res) => {
+    static async createProduct (req,res) {
+        try{
+            console.log('one')
         const product = new Product(req.body)
+        console.log('one',product)
         const newProduct = await product.save()
         if(!newProduct){
             throw new BadRequestError("No product created")
@@ -131,10 +157,14 @@ export default class ProductController{
         res.status(201).json({
             data: newProduct
         })
-    })
+    }catch(err){
+        res.status(500).json({message:err.message})
+    }
+    }
 
     //update product
-    static updateProduct = trycatchHandler(async (req,res) => {
+    static async updateProduct (req,res) {
+        try{
         const newProduct = await Product.findByIdAndUpdate(req.params.id,{
             $set:req.body
         },{
@@ -147,9 +177,13 @@ export default class ProductController{
         res.status(201).json({
             data: newProduct
         })
-    })
+    }catch(err){
+        res.status(500).json({message:err.message})
+    }
+    }
     //delete product
-  static deleteProduct = trycatchHandler(async (req,res,next) => {
+  static async deleteProduct (req,res) {
+    try{
     const product = await Product.findByIdAndDelete(req.params.id)
     if(!product){
       throw new UnauthorizedError("Product not found")
@@ -158,9 +192,13 @@ export default class ProductController{
       status:"success",
       message:"Product has been deleted"
     })
-  })
+    }catch(err){
+        res.status(500).json({message:err.message})
+    }
+  }
     //create product review
-    static productReview = trycatchHandler(async(req,res,next) => {
+    static async productReview (req,res) {
+        try{
         const {rating, comment} = req.body
         const product = await Product.findById({_id:req.params.id})
         if(product){
@@ -184,5 +222,8 @@ export default class ProductController{
         }else{
             throw new BadRequestError("Product review failed")
         }
-    })
+    }catch(err){
+        res.status(500).json({message:err.message})
+    }
+    }
 }

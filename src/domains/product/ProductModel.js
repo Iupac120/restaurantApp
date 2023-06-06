@@ -21,19 +21,45 @@ const reviewSchema = new Schema({
     }
 })
 
+const restaurantSchema = new Schema({
+    restaurant: {
+        type: String,
+        required: [true, 'Please provide a name']
+    },
+    food: [{
+        name: {
+            type: String,
+            required: true
+        },
+        price: {
+            type: Number,
+            required: true
+        }
+    }],
+    drink: [{
+        name: {
+            type: String,
+            required: true
+        },
+        price: {
+            type: Number,
+            required: true
+        }
+    }],
+    imageUrl: {
+        type: [String],
+        required: true,
+    },
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: [true, 'Please provide a name'],
+        ref: "User"
+    }
+});
+
+
 const productSchema = new Schema({
-    name:{
-        type: String,
-        required:true
-    },
-    price:{
-        type: Number,
-        required:true
-    },
-    foodType:{
-        type: String,
-        required: true
-    },
+    name:[restaurantSchema],
     reviews:[reviewSchema],
     numReview:{
         type: Number,
@@ -41,11 +67,11 @@ const productSchema = new Schema({
     },
     description:{
         type: String,
-        required:true
+        default:"Eating delicious balanced diet"
     },
     rating:{
         type: String,
-        required:true
+        default:"3.5"
     },
     discount: {
         type: Number,
@@ -55,21 +81,12 @@ const productSchema = new Schema({
         type: Boolean,
         default: false
       },
-    serviceAvailable:{
+    featured:{
         type: Boolean,
         default: false
-    },
-    imageUrl:{
-        type: [String],
-        required:true,
-    },
-    category:{
-        type:String,
-        enum:{
-            values: ["Breakfast","Lunch","Dinner"],
-            message:'{VALUE} is not supported'
-        }
     }
+},{
+    timestamp:true
 })
 
 export default mongoose.model("Product",productSchema)

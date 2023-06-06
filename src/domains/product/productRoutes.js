@@ -21,7 +21,7 @@ router.put("/product/:id",verifyTokenAndAdmin, ProductController.updateProduct)
 //delete product
 router.delete("/product/:id",verifyTokenAndAdmin, ProductController.updateProduct)
 //create new product
-router.post("/",verifyTokenAndAdmin,ProductController.createProduct)
+router.post("/",ProductController.createProduct)
 //create a product review
 router.post("/:id/review",jwtAuthentication,ProductController.productReview)
 
