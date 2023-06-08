@@ -4,6 +4,12 @@ const router = express.Router()
 import ProductController from "./productControllers.js";
 import jwtAuthentication from "../../middlewares/jwtAuthentication.js";
 import { verifyTokenAndAdmin } from "../../util/verifyTokenAndAdmin.js";
+
+
+//get product by category
+router.get("/category",ProductController.getProductbyCategories)
+//create new product
+router.post("/",ProductController.createProduct)
 //get all product
 router.get("/",ProductController.getAllProduct)
 //search for product
@@ -22,8 +28,6 @@ router.get("/:productId", ProductController.getSingleProduct)
 router.put("/:productId",verifyTokenAndAdmin, ProductController.updateProduct)
 //delete product
 router.delete("/:productId",verifyTokenAndAdmin, ProductController.deleteProduct)
-//create new product
-router.post("/",ProductController.createProduct)
 //create a product review
 router.post("/:id/review",jwtAuthentication,ProductController.productReview)
 

@@ -34,6 +34,10 @@ const restaurantSchema = new Schema({
         price: {
             type: Number,
             required: true
+        },
+        category:{
+            type:String,
+            required:true
         }
     }],
     drink: [{
@@ -57,22 +61,12 @@ const restaurantSchema = new Schema({
     }
 });
 
-const categorySchema = new Schema({
-    name:{
-        type:String,
-        required: true
-    }
-})
 const productSchema = new Schema({
     name:[restaurantSchema],
     reviews:[reviewSchema],
     numReview:{
         type: Number,
         default: 0
-    },
-    category:{
-        type:String,
-        required:true
     },
     description:{
         type: String,
@@ -111,5 +105,67 @@ productSchema.methods.discountPrice = function(/*discountValue*/){
     this.discount = discountValue
     return this.save()
 }
+
+
+//product static for aggregating food by category
+// productSchema.statics.getFoodByCategory = function (category) {
+//   return this.aggregate([
+//     {
+//       $unwind: "$name",
+//     },
+//     {
+//       $unwind: "$name.food",
+//     },
+//     {
+//       $match: {
+//         "name.food.category": category,
+//       },
+//     },
+//     {
+//       $group: {
+//         _id: "$_id",
+//         food: {
+//           $push: "$name.food",
+//         },
+//       },
+//     },
+//   ]);
+// };
+productSchema.statics.getFoodByCategory = function () {
+    return this.aggregate([
+      {
+        $unwind: "$name",
+      },
+      {
+        $unwind: "$name.food",
+      },
+      {
+        $group: {
+          _id: {
+            _id: "$_id",
+            category: "$name.food.category",
+          },
+          food: {
+            $push: "$name.food",
+          },
+        },
+      },
+      {
+        $group: {
+          _id: "$_id._id",
+          category: {
+            $push: "$_id.category",
+          },
+          food: {
+            $first: "$food",
+          },
+        },
+      },
+    ]);
+  };
+  
+
+
+
 
 export default mongoose.model("Product",productSchema)

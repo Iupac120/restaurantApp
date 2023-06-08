@@ -38,17 +38,32 @@ export default class ProductController{
         }
     }
 
-    //get product by categories
-    static async getProductbyCategories (req,res) {
+    // //get product by categories
+    // static async getProductbyCategories (req,res) {
+    //     try{
+    //     const product = await Product.aggregate([
+    //         {$match: {}},
+    //         {$group: {
+    //             _id: '$category', //
+    //             products: {$push: '$$ROOT'}
+    //         }},
+    //         {$project: {name: $_id, products: 1, _id: 0}}
+    //     ])
+    //     res.status(200).json({
+    //         status:"Sucess",
+    //         data:product
+    //     })
+    // }catch(err){
+    //     res.status(500).json({message:err.message})
+    // }
+    // }
+
+       //get product by categories
+       static async getProductbyCategories (req,res) {
         try{
-        const product = await Product.aggregate([
-            {$match: {}},
-            {$group: {
-                _id: '$category', //
-                products: {$push: '$$ROOT'}
-            }},
-            {$project: {name: $_id, products: 1, _id: 0}}
-        ])
+        const product = await Product.getFoodByCategory()
+        console.log(product)
+        if(!product || product.length === 0) throw new UnauthorizedError("No category found")
         res.status(200).json({
             status:"Sucess",
             data:product
@@ -57,6 +72,7 @@ export default class ProductController{
         res.status(500).json({message:err.message})
     }
     }
+
 
     //Get all availabe product
     static async AvailableProduct (req,res) {
