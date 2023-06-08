@@ -57,13 +57,22 @@ const restaurantSchema = new Schema({
     }
 });
 
-
+const categorySchema = new Schema({
+    name:{
+        type:String,
+        required: true
+    }
+})
 const productSchema = new Schema({
     name:[restaurantSchema],
     reviews:[reviewSchema],
     numReview:{
         type: Number,
         default: 0
+    },
+    category:{
+        type:String,
+        required:true
     },
     description:{
         type: String,
