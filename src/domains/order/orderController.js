@@ -103,8 +103,29 @@ export class OrderController {
     }
     }
 
+     //update order
+  static async updateOrder (req,res) {
+    try{
+    const order = await Order.findByIdAndUpdate({_id:req.params.orderId},{$set:req.body},{
+        new: true,
+        runValidators: true
+    })
+    if(!order){
+      throw new UnauthorizedError("Order not found")
+    }
+    res.status(200).json({
+      status:"success",
+      message:"Order has been updated"
+    })
+    }catch(err){
+        console.log(err)
+        res.status(500).json({message:err.message})
+    }
+  }
+
     //delete order
-  static deleteOrder = trycatchHandler(async (req,res,next) => {
+  static async deleteOrder (req,res) {
+    try{
     const order = await Order.findByIdAndDelete(req.params.orderId)
     if(!order){
       throw new UnauthorizedError("Order not found")
@@ -113,7 +134,11 @@ export class OrderController {
       status:"success",
       message:"Order has been deleted"
     })
-  })
+    }catch(err){
+        console.log(err)
+        res.status(500).json({message:err.message})
+    }
+  }
   //get all orders by Admin
   static getAllOrder = trycatchHandler(async (req,res) => {
     const orders =  await Order.find({})

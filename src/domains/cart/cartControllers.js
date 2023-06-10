@@ -1,4 +1,5 @@
 import BadRequestError from "../../errors/badRequestError.js"
+import UnauthorizedError from "../../errors/unAuthorizedError.js"
 import { trycatchHandler } from "../../middlewares/trycatchHandler.js"
 import Cart from "./cartModel.js"
 
@@ -44,7 +45,7 @@ export default class CartController {
         //delete cart
   static async deleteCart (req,res) {
     try{
-    const cart = await Cart.findByIdAndDelete(req.params.id)
+    const cart = await Cart.findByIdAndDelete(req.params.cartId)
     if(!cart){
       throw new UnauthorizedError("Product not found")
     }
@@ -58,16 +59,22 @@ export default class CartController {
   }
 
   // find user cart
-  static getCart = trycatchHandler(async (req,res,next) => {
-    const cart = await Cart.findOne({user:req.user.userId})
+  static async getCart (req,res) {
+    try{
+    const cart = await Cart.find({user:req.params.userId})
+    console.log("one",cart)
     if(!cart){
-      throw new UnauthorizedError("User not found")
+      throw new UnauthorizedError("user cart not found")
     }
     res.status(200).json({
       status:"success",
       data:cart
     })
-  })
+  }catch(err){
+    console.log(err)
+    res.status(500).json({message:err.message})
+  }
+  }
 
   //get all carts
   static getAllCart = trycatchHandler(async (req,res) => {

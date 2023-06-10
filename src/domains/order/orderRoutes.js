@@ -12,6 +12,8 @@ router.post("/", jwtAuthentication, OrderController.createMealOrder)
 router.get("/", jwtAuthentication, OrderController.loginMealOrder)
 //get order
 router.get("/:orderId",jwtAuthentication,OrderController.getMealOrder)
+//updte order
+router.put("/:orderId",jwtAuthentication,OrderController.updateOrder)
 //delete order
 router.delete("/:orderId",jwtAuthentication,OrderController.deleteOrder)
 //update payment order

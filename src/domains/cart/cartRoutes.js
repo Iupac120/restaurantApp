@@ -9,7 +9,7 @@ router.get("/",verifyTokenAndAdmin, CartController.getAllCart)
 router.post("/",jwtAuthentication, CartController.createCart)
 router.put("/:cartId",jwtAuthentication, CartController.updateCart)
 router.get("/:userId",jwtAuthentication, CartController.getCart)
-router.delete("/:userId",jwtAuthentication, CartController.deleteCart)
+router.delete("/:cartId",jwtAuthentication, CartController.deleteCart)
 
 
 export {router}
