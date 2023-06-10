@@ -281,4 +281,40 @@ export default class ProductController{
         res.status(500).json({message:err.message})
     }
     }
+    static async favourite(req,res){
+        try{
+            const product = await Product.find({rating:{$gt:3.5}}).limit(5).sort({rating:-1})
+            if(!product || product.length === 0){
+                const product = await Product.find({rating:{$gt:3}}).limit(5).sort({rating:-1})
+                res.status(201).json({product})
+            }
+            res.status(201).json({product})
+        }catch(err){
+            res.status(500).json({messge:err.message})
+        }
+    }
+    // static async countByCategory (req,res){
+    //     try{
+    //         const count = req.query.countCat.split(",")
+    //         const list = await Promise.all(count.map((cat) =>{
+    //             return Product.countDocuments({["name[food.category]"]:cat})
+    //         }))
+    //         res.status(201).json(list)
+
+    //     }catch(err){
+    //         res.status(201).json({message:err.message})
+    //     }
+    // }
+    static async countByCategory(req, res) {
+        try {
+          const count = req.query.countCat.split(",");
+          const list = await Promise.all(count.map(async (cat) => {
+            return await Product.countDocuments({ "name.food.category": cat });
+          }));
+          res.status(201).json(list);
+        } catch (err) {
+          res.status(201).json({ message: err.message });
+        }
+      }
+      
 }

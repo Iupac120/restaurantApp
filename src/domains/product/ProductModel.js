@@ -62,7 +62,7 @@ const restaurantSchema = new Schema({
 });
 
 const productSchema = new Schema({
-    name:[restaurantSchema],
+    eatery:[restaurantSchema],
     reviews:[reviewSchema],
     numReview:{
         type: Number,
@@ -74,6 +74,8 @@ const productSchema = new Schema({
     },
     rating:{
         type: String,
+        min:0,
+        max:5,
         default:"3.5"
     },
     discount: {

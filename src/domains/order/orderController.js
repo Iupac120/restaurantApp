@@ -1,64 +1,88 @@
 import Stripe from "stripe";
 //const Stripe = process.env.STRIPE_SECRET_KEYS
 import Order from "./OrderModel.js";
+import Product from "../product/ProductModel.js"
 import { trycatchHandler } from "../../middlewares/trycatchHandler.js";
 import BadRequestError from "../../errors/badRequestError.js";
 import UnauthorizedError from "../../errors/unAuthorizedError.js";
 import { calculateOrderAmount } from "../../util/totalOrderPrice.js";
 
 export class OrderController { 
-    static createMealOrder = trycatchHandler(async(req,res,next) => {
+    static async createMealOrder (req,res) {
+        console.log("one",req.user)
         const {
             orderItems,
-            shippingAddress,
+            address,
             paymentMethod,
-            taxPrice,
-            shippingPrice,
             totalPrice
         } = req.body
+        try{
         if(orderItems && orderItems.length === 0){
             throw new BadRequestError("No order items")
         }else{
             const order = new Order({
+                user:req.user.jwtId,
                 orderItems,
-                shippingAddress,
+                address,
                 paymentMethod,
-                taxPrice,
-                shippingPrice,
                 totalPrice
             })
             const createOrder = await order.save()
             res.status(201).json(createOrder)
         }
-    })
-    //get a single meal order
-    static getMealOrder = trycatchHandler(async(req,res,next) => {
-        const {id} = req.params
-        const order = await Order.findById({_id: id}).populate(//populate is used to reference a "ref"
+    }catch(err){
+        console.log(err)
+        res.status(500).json({message:err.message})
+    }
+    }
+    //get a single meal order by Id
+    static async getMealOrder (req,res) {
+        const {orderId} = req.params
+    try{
+        const order = await Order.findById({_id: orderId}).populate(//populate is used to reference a "ref"
             "user", //user is from the user ref in order model
-            "name email" //name and email are from the user model
-        )
+            "username email" //name and email are from the user model
+        ).populate({
+            path:"orderItems",
+            select:"eatery",
+            populate:{
+                path:"eatery",
+                select:"restaurant"
+            }   
+        })
+        console.log("one",order)
         if(order){
             res.status(201).json(order)
         }else{
             throw new UnauthorizedError("Order not found")
         }
-    })
+    }catch(err){
+        console.log(err)
+        res.status(500).json({message:err.message})
+    }
+    }
 
-    //login for a meal order
-    static loginMealOrder = trycatchHandler(async(req,res,next) => {
-        const order = await Order.findById({user: req.user._id}).sort({_id: -1})
+    //user login to get meal orders
+    static async loginMealOrder (req,res) {
+        try{
+            console.log("one",req.user)
+        const order = await Order.find({user: req.user.jwtId})/*.sort({_id: -1})*/
         if(order){
             res.status(201).json(order)
         }else{
             throw new UnauthorizedError("Order not found")
         }
-    })
+    }catch(err){
+        console.log(err)
+        res.status(500).json({message:err.message})
+    }
+    }
 
     //update meal order
-    static updatePaidOrder = trycatchHandler(async(req,res,next) => {
-        const {id} = req.params
-        const order = await Order.findById({_id: id})
+    static async updatePaidOrder (req,res)  {
+        const {orderId} = req.params
+        try{
+        const order = await Order.findById({_id: orderId})
         if(order){
             order.isPaid = true,
             order.paidAt = Date.now(),
@@ -73,11 +97,15 @@ export class OrderController {
         }else{
             throw new UnauthorizedError("Order not found")
         }
-    })
+    }catch(err){
+        console.log(err)
+        res.status(500).json({message:err.message})
+    }
+    }
 
     //delete order
   static deleteOrder = trycatchHandler(async (req,res,next) => {
-    const order = await Order.findByIdAndDelete(req.params.id)
+    const order = await Order.findByIdAndDelete(req.params.orderId)
     if(!order){
       throw new UnauthorizedError("Order not found")
     }
@@ -86,7 +114,7 @@ export class OrderController {
       message:"Order has been deleted"
     })
   })
-  //get all orders
+  //get all orders by Admin
   static getAllOrder = trycatchHandler(async (req,res) => {
     const orders =  await Order.find({})
     if(!orders){

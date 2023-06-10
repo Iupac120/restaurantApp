@@ -4,26 +4,29 @@ const Schema = mongoose.Schema
 const orderSchema = new Schema({
     user:{
         type: mongoose.Schema.Types.ObjectId,
-        required: false,
+        required: true,
         ref:"User"
     },
-    orderItems:{
-        name:{type:String, required: true},
-        amount:{type:String, required: true},
-        imageUrl:{type:String, required: true},
-        price:{type:String, required: true},
-        product:{
-            type:String, 
-            required: true,
-            ref:"Product"
-        }
-    },
-    shippingAddress:{
-        address:{type:String, required: true},
-        city:{type:String, required: true},
-        postalCode:{type:String, required: true},
-        Country:{type:String, required: true}
-    },
+    orderItems:[
+        // product:{
+        //     type:String, 
+        //     required: true,
+        //     ref:"Product"
+        // }
+        //products:[
+            {
+                productId:{
+                    type:mongoose.Schema.Types.ObjectId ,
+                    ref:"Product"
+                },
+                quantity:{
+                    type: Number,
+                    default:0
+                }
+            }
+          // ],
+        ],
+    address:{type:String, required: true},
     paymentMethod:{
         type:String, 
         required: true
@@ -33,16 +36,6 @@ const orderSchema = new Schema({
         status:{type:String},
         update_time:{type:String},
         email_address:{type:String},
-    },
-    taxPrice:{
-        type:String,
-        required: true,
-        default:0.0
-    },
-    shippingPrice:{
-        type:Number,
-        required: true,
-        default:0.0 
     },
     totalPrice:{
         type:Number,
@@ -67,10 +60,12 @@ const orderSchema = new Schema({
     },
     lat:{
         type: Number,
+        default:0,
         required: true
     },
     long:{
         type: Number,
+        default:0,
         required: true
     }
 }, {timestamps: true})

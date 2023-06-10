@@ -8,6 +8,10 @@ import { verifyTokenAndAdmin } from "../../util/verifyTokenAndAdmin.js";
 
 //get product by category
 router.get("/category",ProductController.getProductbyCategories)
+//get product by favourite
+router.get("/favourite",ProductController.favourite)
+//count by category
+router.get("/countByCategory", ProductController.countByCategory)
 //create new product
 router.post("/",ProductController.createProduct)
 //get all product

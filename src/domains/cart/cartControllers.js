@@ -4,7 +4,8 @@ import Cart from "./cartModel.js"
 
 export default class CartController {
     //create cart
-    static createCart = trycatchHandler(async (req,res) => {
+    static async createCart (req,res) {
+      try{
         const cart = new Cart(req.body)
         const newCart = await cart.save()
         if(!newCart){
@@ -13,11 +14,16 @@ export default class CartController {
         res.status(201).json({
             data: newCart
         })
-    })
+      }catch(err){
+        console.log(err)
+        res.status(500).json({message:err.message})
+      }
+    }
 
     //update cart
-    static updateCart = trycatchHandler(async (req,res) => {
-        const newCart = await Cart.findByIdAndUpdate(req.params.id,{
+    static async updateCart (req,res) {
+      try{
+        const newCart = await Cart.findByIdAndUpdate(req.params.cartId,{
             $set:req.body
         },{
             new: true,
@@ -29,10 +35,15 @@ export default class CartController {
         res.status(201).json({
             data: newCart
         })
-    })
+      }catch(err){
+        console.log(err)
+        res.status(500).json({message:err.message})
+      }
+    }
 
         //delete cart
-  static deleteCart = trycatchHandler(async (req,res) => {
+  static async deleteCart (req,res) {
+    try{
     const cart = await Cart.findByIdAndDelete(req.params.id)
     if(!cart){
       throw new UnauthorizedError("Product not found")
@@ -41,11 +52,14 @@ export default class CartController {
       status:"success",
       message:"Product has been deleted"
     })
-  })
+  }catch(err){
+    res.status(500).jsom({message:err.message})
+  }
+  }
 
   // find user cart
   static getCart = trycatchHandler(async (req,res,next) => {
-    const cart = await Cart.findOne(req.user._id)
+    const cart = await Cart.findOne({user:req.user.userId})
     if(!cart){
       throw new UnauthorizedError("User not found")
     }
