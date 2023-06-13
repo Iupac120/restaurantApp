@@ -61,7 +61,7 @@ export default class CartController {
   // find user cart
   static async getCart (req,res) {
     try{
-    const cart = await Cart.find({user:req.params.userId})
+    const cart = await Cart.findOne({user:req.params.userId})
     console.log("one",cart)
     if(!cart){
       throw new UnauthorizedError("user cart not found")

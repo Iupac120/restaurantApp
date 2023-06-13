@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 import cors from "cors";
 import cookieParser from "cookie-parser";
 app.use(express.urlencoded({extended:false}));
+app.use(express.static('public'))
 app.use(cors());
 
 import connectDB from './src/config/connection.js';
@@ -17,26 +18,15 @@ import { errorHandler } from './src/middlewares/errorHandler.js';
 import { notFound } from './src/middlewares/notFound.js';
 app.use(express.json())
 app.use(morgan('tiny'))
-// app.use(express.json({
-//     //we need the raw body to verify the webhook signature
-//     verify: function(req,res, buf){
-//         if(req.originalUrl.startsWith('/webhook')){
-//             req.rawBody = buf.toString()
-//         }
-//     }
-// }))
+
 
 //API
 app.use('/api/v1/user',userRouter)
 app.use("/api/v1/product",productRouter)
 app.use("/api/v1/order",orderRouter)
 app.use("/api/v1/cart",cartRouter)
-app.post("/api/v1/body",(req,res) => {
-    console.log("body")
-    res.status(200).json({
-        data:req.body
-    })
-})
+//view engine
+app.set('view engine', 'ejs')
 
 
 

@@ -14,12 +14,15 @@ router.get("/favourite",ProductController.favourite)
 router.get("/countByCategory", ProductController.countByCategory)
 //create new product
 router.post("/",ProductController.createProduct)
+router.post("/:restaurantId",ProductController.createRestaurant)
 //get all product
 router.get("/",ProductController.getAllProduct)
 //search for product
 router.get("/search",ProductController.searchProduct)
 //get product by categories
 router.get("/getProductCategories", ProductController.getProductbyCategories)
+router.get("/get_restaurant/:resId/iteId", ProductController.getAllRestaurants)
+router.get("/product/eatery/eateryId",ProductController.getByEatery)
 //get available product
 router.get("/availableProduct", ProductController.AvailableProduct)
 //get promotion available

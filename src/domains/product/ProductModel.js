@@ -21,48 +21,19 @@ const reviewSchema = new Schema({
     }
 })
 
-const restaurantSchema = new Schema({
-    restaurant: {
-        type: String,
-        required: [true, 'Please provide a name']
-    },
-    food: [{
-        name: {
-            type: String,
-            required: true
-        },
-        price: {
-            type: Number,
-            required: true
-        },
-        category:{
-            type:String,
-            required:true
-        }
-    }],
-    drink: [{
-        name: {
-            type: String,
-            required: true
-        },
-        price: {
-            type: Number,
-            required: true
-        }
-    }],
-    imageUrl: {
-        type: [String],
-        required: true,
-    },
-    user: {
-        type: mongoose.Schema.Types.ObjectId,
-        required: [true, 'Please provide a name'],
-        ref: "User"
-    }
-});
+
 
 const productSchema = new Schema({
-    eatery:[restaurantSchema],
+    name:{type: String, required:true},
+    type:{type:String,required: true},
+    category:{type:String,required: true},
+    price:{type:String,required: true},
+    imageUrl:{type:[String]},
+    restaurants:[{
+      type:mongoose.Schema.Types.ObjectId,
+      ref:"Restaurant",
+      //required: true
+    }],
     reviews:[reviewSchema],
     numReview:{
         type: Number,
@@ -109,62 +80,7 @@ productSchema.methods.discountPrice = function(/*discountValue*/){
 }
 
 
-//product static for aggregating food by category
-// productSchema.statics.getFoodByCategory = function (category) {
-//   return this.aggregate([
-//     {
-//       $unwind: "$name",
-//     },
-//     {
-//       $unwind: "$name.food",
-//     },
-//     {
-//       $match: {
-//         "name.food.category": category,
-//       },
-//     },
-//     {
-//       $group: {
-//         _id: "$_id",
-//         food: {
-//           $push: "$name.food",
-//         },
-//       },
-//     },
-//   ]);
-// };
-productSchema.statics.getFoodByCategory = function () {
-    return this.aggregate([
-      {
-        $unwind: "$name",
-      },
-      {
-        $unwind: "$name.food",
-      },
-      {
-        $group: {
-          _id: {
-            _id: "$_id",
-            category: "$name.food.category",
-          },
-          food: {
-            $push: "$name.food",
-          },
-        },
-      },
-      {
-        $group: {
-          _id: "$_id._id",
-          category: {
-            $push: "$_id.category",
-          },
-          food: {
-            $first: "$food",
-          },
-        },
-      },
-    ]);
-  };
+
   
 
 
