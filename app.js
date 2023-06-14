@@ -14,6 +14,7 @@ import {router as userRouter} from "./src/domains/user/userRoutes.js"
 import {router as productRouter} from "./src/domains/product/productRoutes.js"
 import {router as orderRouter} from "./src/domains/order/orderRoutes.js"
 import {router as cartRouter} from "./src/domains/cart/cartRoutes.js"
+import {router as paymentRouter} from "./src/domains/payment/stripe.js"
 import { errorHandler } from './src/middlewares/errorHandler.js';
 import { notFound } from './src/middlewares/notFound.js';
 app.use(express.json())
@@ -25,13 +26,14 @@ app.use('/api/v1/user',userRouter)
 app.use("/api/v1/product",productRouter)
 app.use("/api/v1/order",orderRouter)
 app.use("/api/v1/cart",cartRouter)
+app.use("/api/v1/checkout",paymentRouter)
 //view engine
 app.set('view engine', 'ejs')
 
 
 
 
-const PORT = process.env.PORT || 3000
+const PORT = process.env.PORT || 5000
 
 
 app.use(cookieParser)
