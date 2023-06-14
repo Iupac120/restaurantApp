@@ -1,17 +1,13 @@
+import dotenv from "dotenv"
+dotenv.config()
 import nodemailer from "nodemailer";
-import {v4 as uuidv4} from "uuid";
-//import UserVerification from "../database/model/UserVerification.js";
-//import PasswordReset from "../database/model/PasswordReset.js";
-import bcrypt from "bcrypt"
-//import OTPVerification from "../database/model/OTPVerification.js";
-import User from "../domains/user/UserModel.js";
-import {randomOtp, randomString} from "./randomString.js";
+
 
 let transporter = await nodemailer.createTransport({
-    service:"gmail",
+    service:process.env.NODEMAILER_HOST,
     auth:{
-      user:'iupac120@gmail.com',
-      pass:'sdnyevcyrvzptlhd'
+      user:process.env.NODEMAILER_EMAIL,
+      pass:process.env.NODEMAILER_PASS
     }
   })
 transporter.verify((err,success) => {
