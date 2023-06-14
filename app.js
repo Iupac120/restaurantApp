@@ -1,8 +1,8 @@
+import dotenv from 'dotenv';
 dotenv.config()
 import express from 'express';
 const app = express()
 import morgan from 'morgan';
-import dotenv from 'dotenv';
 import cors from "cors";
 import cookieParser from "cookie-parser";
 app.use(express.urlencoded({extended:false}));
