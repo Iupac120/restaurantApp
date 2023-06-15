@@ -7,7 +7,7 @@ import { verifyTokenAndAdmin } from "../../util/verifyTokenAndAdmin.js";
 // get all order
 router.get("/meal_orders",verifyTokenAndAdmin, OrderController.getAllOrder)
 //create orders
-router.post("/", jwtAuthentication, OrderController.createMealOrder)
+router.post("/:productId", jwtAuthentication, OrderController.createMealOrder)
 //get user meal order
 router.get("/", jwtAuthentication, OrderController.loginMealOrder)
 //get order

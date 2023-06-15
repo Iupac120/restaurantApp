@@ -265,7 +265,11 @@ export default class ProductController{
         try{
             const product = await Product.findOne({name:productName})
             if(!product || product.length === 0) throw new BadRequestError("Product no found. Please create a product")
-            const restaurantExist = await Restaurant.findById({_id:restaurantId}).populate("products","name")
+            //const restaurantExist = await Restaurant.findById({_id:restaurantId})
+            const restaurantExist = await Restaurant.find({name:restaturantName,"products.name":productName})
+            if(restaurantExist){
+                throw new UnauthorizedError("Product already exist")
+            }
             if(!restaurantExist || restaurantExist === 0){
                 const restat = new Restaurant({
                     name:restaturantName,
@@ -275,17 +279,18 @@ export default class ProductController{
                 })
                 await restat.save()
             }
+        
             console.log(product._id)
             console.log(restaurantExist)
-            const productItem = await restaurantExist.products.find((item) => {
-                return item.name === productName 
-            })
-            console.log(productItem)
+            //const productItem = await restaurantExist.find({"product.name":productName})
+            //console.log(productItem)
             restaurantExist.products.push([product._id])
             const newRes = await restaurantExist.save()
             if(!newRes || newRes.length === 0){
                 throw new BadRequestError("No product created")
             }
+            product.restaurants.push[newRes._id]
+            await product.save()
         res.status(201).json({
             message: "Success",
             data: product
@@ -302,7 +307,7 @@ export default class ProductController{
         const newProduct = await Product.findByIdAndUpdate(req.params.productId,{
             $set:req.body
         },{
-            new: true,
+            new: true, 
             runValidators: true
         })
         if(!newProduct){

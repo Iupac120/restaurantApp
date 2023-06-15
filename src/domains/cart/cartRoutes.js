@@ -6,7 +6,7 @@ import {verifyTokenAndAdmin} from "../../util/verifyTokenAndAdmin.js"
 
 
 router.get("/",verifyTokenAndAdmin, CartController.getAllCart)
-router.post("/",jwtAuthentication, CartController.createCart)
+router.post("/:productId",jwtAuthentication, CartController.addToCart)
 router.put("/:cartId",jwtAuthentication, CartController.updateCart)
 router.get("/:userId",jwtAuthentication, CartController.getCart)
 router.delete("/:cartId",jwtAuthentication, CartController.deleteCart)

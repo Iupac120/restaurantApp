@@ -10,22 +10,20 @@ import { calculateOrderAmount } from "../../util/totalOrderPrice.js";
 export class OrderController { 
     static async createMealOrder (req,res) {
         console.log("one",req.user)
-        const {
-            orderItems,
+        const {body:{
             address,
-            paymentMethod,
-            totalPrice
-        } = req.body
+            paymentMethod},params:{productId}
+        } = req
         try{
         if(orderItems && orderItems.length === 0){
             throw new BadRequestError("No order items")
         }else{
             const order = new Order({
                 user:req.user.jwtId,
-                orderItems,
+                orderItems:orderItems.productId.push[productId],
                 address,
                 paymentMethod,
-                totalPrice
+                totalPrice:calculateOrderAmount(orderItems)
             })
             const createOrder = await order.save()
             res.status(201).json(createOrder)
@@ -42,14 +40,7 @@ export class OrderController {
         const order = await Order.findById({_id: orderId}).populate(//populate is used to reference a "ref"
             "user", //user is from the user ref in order model
             "username email" //name and email are from the user model
-        ).populate({
-            path:"orderItems",
-            select:"eatery",
-            populate:{
-                path:"eatery",
-                select:"restaurant"
-            }   
-        })
+        ).populate("orderItems.productId")
         console.log("one",order)
         if(order){
             res.status(201).json(order)
@@ -149,42 +140,7 @@ export class OrderController {
         data: orders
     })
   })
-    //make payment for meal order
-    // static async payment (req,res) {
-    //     let data, eventType;
-    //     //check if the webhook is configured
-    //     if(process.env.STRIPE_WEBHOOK_KEYS){
-    //         //retrieve the event by verifying the signatures the raw body and webhook secreet
-    //         let event;
-    //         let signature = req.headers['stripe-signature'];
-    //         try{
-    //             event = Stripe.webhooks.constructEvent(
-    //                 req.rawBody,
-    //                 signature,
-    //                 process.env.STRIPE_WEBHOOK_KEYS
-    //             )
-    //         }catch(err){
-    //             console.log(err)
-    //             return res.status(400).json({
-    //                 status:"Failed"
-    //             })
-    //         }
-    //         data = event.data;
-    //         eventType = event.type
-    //     }else{
-    //         // we can retieve the event data direct from the request body
-    //         data = req.body.data;
-    //         eventType = req.body.type
-    //     }
-    //     if(eventType === 'payment_intent.succeded'){
-    //         // funct has been captured and payment made
-    //         //fulfill event order, email, receipt
-    //     }else if(eventType === 'payment_intent.payent_failed'){
-    //         console.log('payment failed')
-    //     }
-    //     res.status(200)
-    // }
-
+   
     //create new food delivery order
     static async createPaymentIntent(req,res) {
         const {body:{paymentOption,orderItems, shippingAddress},user:{_id:userId}} = req

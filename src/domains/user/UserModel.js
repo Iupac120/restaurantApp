@@ -55,6 +55,25 @@ const UserSchema = new mongoose.Schema({
       type: Date,
       default: null
      },
+     cart:{
+      items:[
+        {
+            productId:{
+                type: mongoose.Schema.Types.ObjectId,
+                ref:"Product"
+            },
+            quantity:{
+                type: Number,
+                default:0
+            }
+        },
+       ],
+       totalPrice:{
+        type:Number,
+        required: true,
+        default:0
+    },
+     },
     firstName: String,
     lastName: String,
     fullName: String,
@@ -83,6 +102,23 @@ UserSchema.methods.refreshJwtToken = function (){
 UserSchema.methods.comparePassword = async function(candidatePassword){
   const isMatch =  await bcrypt.compare(candidatePassword, this.password);
   return isMatch;
+}
+UserSchema.methods.addToCart =  function(product){
+  let cart = this.cart
+  if(cart.items.length == 0){
+    cart.items.push({productId:product._id, quantity:1})
+    cart.totalPrice = product.price
+  }else{
+    const isExisting =  cart.item.findIndex(objectId => objectId.productId == product._id)
+    if(isExisting == -1){//if the product does not exist
+      cart.items.push({productId:product._id,quantity:1})
+      cart.totalPrice += product.price
+    }else{
+      const existingProductInCart = cart.items[isExisting]
+      existingProductInCart.quantity += 1
+      cart.totalPrice  += product.price
+    }
+  }
 }
 
 
