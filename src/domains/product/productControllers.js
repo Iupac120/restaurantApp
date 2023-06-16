@@ -197,7 +197,7 @@ export default class ProductController{
             //     queryObject.category = category
             // }
             if(restaurant){
-                queryObject['restaurant'] = {$regex: restaurant, $options: 'i'}
+                queryObject[restaurant] = {$regex: restaurant, $options: 'i'}
             }
             if(name){
                 queryObject.name = {$regex: name, $options: 'i'}

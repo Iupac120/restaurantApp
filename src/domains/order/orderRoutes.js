@@ -10,6 +10,8 @@ router.get("/meal_orders",verifyTokenAndAdmin, OrderController.getAllOrder)
 router.post("/:productId", jwtAuthentication, OrderController.createMealOrder)
 //get user meal order
 router.get("/", jwtAuthentication, OrderController.loginMealOrder)
+//get prefer order
+router.get("/prefer",jwtAuthentication, OrderController.preferOrder)
 //get order
 router.get("/:orderId",jwtAuthentication,OrderController.getMealOrder)
 //updte order
