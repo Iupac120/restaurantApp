@@ -1,6 +1,8 @@
 import express from "express";
 const router = express.Router()
 
+        
+
 import ProductController from "./productControllers.js";
 import jwtAuthentication from "../../middlewares/jwtAuthentication.js";
 import { verifyTokenAndAdmin } from "../../util/verifyTokenAndAdmin.js";
@@ -37,5 +39,5 @@ router.put("/:productId",verifyTokenAndAdmin, ProductController.updateProduct)
 router.delete("/:productId",verifyTokenAndAdmin, ProductController.deleteProduct)
 //create a product review
 router.post("/:id/review",jwtAuthentication,ProductController.productReview)
-
+router.post("/uploadImage",ProductController.uploadImage)
 export {router}

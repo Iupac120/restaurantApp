@@ -58,16 +58,27 @@ const orderSchema = new Schema({
     deliverdAt:{
         type: Date
     },
-    lat:{
-        type: Number,
-        default:0,
-        required: true
-    },
-    long:{
-        type: Number,
-        default:0,
-        required: true
+    location:{
+        type:{
+            type:String,
+            default:"point"
+        },
+        coordinates:[{
+            lat:{
+                type: Number,
+                default:0,
+                required: true
+            },
+            long:{
+                type: Number,
+                default:0,
+                required: true
+            }
+        }]
     }
+    
 }, {timestamps: true})
+
+orderSchema.index({location:"2dsphere"})
 
 export default mongoose.model("Order", orderSchema)

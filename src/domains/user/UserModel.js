@@ -105,18 +105,20 @@ UserSchema.methods.comparePassword = async function(candidatePassword){
 }
 UserSchema.methods.addToCart =  function(product){
   let cart = this.cart
+  const productTotalPrice = product.discount > 0? product.price - (product.price*(product.discount/100)) : product.price
   if(cart.items.length == 0){
     cart.items.push({productId:product._id, quantity:1})
-    cart.totalPrice = product.price
+    cart.totalPrice = productTotalPrice//product.price
   }else{
-    const isExisting =  cart.item.findIndex(objectId => objectId.productId == product._id)
+    const isExisting =  cart.items.findIndex(objectId => new String(objectId.productId).trim() === new String(product._id).trim())
     if(isExisting == -1){//if the product does not exist
       cart.items.push({productId:product._id,quantity:1})
-      cart.totalPrice += product.price
+      cart.totalPrice += productTotalPrice//product.price
     }else{
       const existingProductInCart = cart.items[isExisting]
+      console.log("exis",existingProductInCart)
       existingProductInCart.quantity += 1
-      cart.totalPrice  += product.price
+      cart.totalPrice  += productTotalPrice//product.price
     }
   }
 }

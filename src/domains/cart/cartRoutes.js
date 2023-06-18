@@ -7,9 +7,10 @@ import {verifyTokenAndAdmin} from "../../util/verifyTokenAndAdmin.js"
 
 router.get("/",verifyTokenAndAdmin, CartController.getAllCart)
 router.post("/:productId",jwtAuthentication, CartController.addToCart)
-router.put("/:cartId",jwtAuthentication, CartController.updateCart)
-router.get("/:userId",jwtAuthentication, CartController.getCart)
-router.delete("/:cartId",jwtAuthentication, CartController.deleteCart)
+router.post("/:productId",jwtAuthentication, CartController.removeFromCart)
+router.get("/:productId",jwtAuthentication, CartController.editCart)
+router.get("/user",jwtAuthentication, CartController.getCart)
+router.get("/delete",jwtAuthentication, CartController.deleteCart)
 
 
 export {router}

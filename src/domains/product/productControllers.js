@@ -3,6 +3,8 @@ import Restaurant from "./RestaurantModel.js";
 import { trycatchHandler } from "../../middlewares/trycatchHandler.js";
 import BadRequestError from "../../errors/badRequestError.js"
 import UnauthorizedError from "../../errors/unAuthorizedError.js";
+import multer from "multer";
+import path from "path"
 
 
 export default class ProductController{
@@ -455,6 +457,26 @@ export default class ProductController{
             console.log(err)
             res.status(500).json({message:err.messae})
         }
+    }
+
+    //upload image
+    static async uploadImage (req,res){
+        const storage = multer.diskStorage({
+            destination:function(req,file,cb){
+                cb(null,path.join(__dirname,"public/Images"),function(err,success){
+                    if(err) throw err
+                })
+            },
+            filename:function(req,file,cb){
+                const name = Date.now()+'-'+file.originalname;
+                cb(null, name, function(err,success){
+                    if(err) throw err
+                })
+            }
+        })
+        
+        const upload = multer({storage:storage})
+        upload.single("imageUrl")
     }
       
 }

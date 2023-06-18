@@ -367,10 +367,10 @@ static resendOTPVerification = trycatchHandler(async(req,res,next) => {
   //refresh token handler
   static async refresh (req,res){
     //access cookie to cookies
-    const cookies = req.Cookies
-    //check if cookies exist
-    console.log("one", cookies)
-    if(!cookies?.jwt) return res.sendStatus(401)
+    const cookies = req.cookies
+     //check if cookies exist
+     console.log("one", cookies)
+     if(!cookies?.jwt) return res.sendStatus(401)
     const refreshTokenCookie = cookies.jwt
     console.log("two", refreshTokenCookie)
     //find from record the cookie user
@@ -378,7 +378,9 @@ static resendOTPVerification = trycatchHandler(async(req,res,next) => {
     console.log("three",foundUser)
     if (!foundUser) return res.sendStatus(403)
     jwt.verify(refreshTokenCookie,process.env.REFRESH_TOKEN,(err,decoded) => {
-        if(err || foundUser._id !== decoded._id) return res.status(403)
+      console.log("four",decoded)
+        if(err || new String(foundUser._id).trim() !== new String(decoded.userId).trim()) return res.status(403)
+        console.log("five", foundUser._id == decoded.userId)
         const acctoke = foundUser.accessJwtToken()
         res.status(201).json(acctoke)
     })
@@ -388,7 +390,7 @@ static resendOTPVerification = trycatchHandler(async(req,res,next) => {
   static async logout (req,res){
     //on the client delete the access token
     //access cookie to cookies
-    const cookies = req.Cookies
+    const cookies = req.cookies
     //check if cookies exist
     console.log("aaa")
     if(!cookies?.jwt) return res.sendStatus(204) //no content
@@ -405,10 +407,10 @@ static resendOTPVerification = trycatchHandler(async(req,res,next) => {
     }
     console.log("three")
     //delete the refresh token in the db
-    foundUser.refreshToken = ""
+    foundUser.refreshToken = null
     await foundUser.save()
     res.clearCookie("jwt",{httpOnly: true, maxAge: 24*60*60*1000})
-    res.send(204).json({message:"You have been logged out"})
+    res.status(201).json({message:"You have been logged out"})
   }
   
   //user profile

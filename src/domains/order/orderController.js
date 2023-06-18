@@ -23,6 +23,8 @@ export class OrderController {
         } = req
         try{
             const  product  = await Product.findById({_id:productId})
+            const productTotalPrice = product.discount > 0? product.price - (product.price*(product.discount/100)) : product.price
+            console.log("discount",productTotalPrice)
             if(!product && product.length === 0){
                 throw new BadRequestError("Product not found")
             }
@@ -33,7 +35,7 @@ export class OrderController {
                     orderItems:[{productId:product._id, quantity: 1}],
                     address,
                     paymentMethod,
-                    totalPrice: product.price
+                    totalPrice: productTotalPrice//product.price
                 })
                 console.log(newOrder)
                 const productOrder = await newOrder.save()
@@ -42,14 +44,14 @@ export class OrderController {
                 const isExisting =  order.orderItems.findIndex(objectId => new String(objectId.productId).trim() == new String(product._id).trim())
                 if(isExisting == -1){//if the product does not exist
                     order.orderItems.push({productId:product._id,quantity:1})
-                    order.totalPrice += product.price
+                    order.totalPrice += productTotalPrice//product.price
                 }else{
                     const existingProductInCart = order.orderItems[isExisting]
                     if(existingProductInCart.isPaid === true || existingProductInCart.isDelivered === true){
                         throw new UnauthorizedError("This order has been booked already")
                     }
                     existingProductInCart.quantity += 1
-                    order.totalPrice  += product.price
+                    order.totalPrice  += productTotalPrice//product.price
                 }
                 const createOrder = await order.save()
                 res.status(201).json(createOrder)
@@ -93,7 +95,7 @@ export class OrderController {
     }
     //get preference meal order
     static async preferOrder (req,res) {
-        const {isPaid,isDelivered,productLocation} = req.query
+        const {body:{lat,long},query:{isPaid,isDelivered,location}} = req
         const preferObj = {}
         try {
             if(isPaid){
@@ -102,8 +104,8 @@ export class OrderController {
             if(isDelivered){
                 preferObj.isDelivered = isDelivered
             }
-            if(productLocation){
-                preferObj.productLocation = [long, lat]
+            if(location){
+                preferObj.location = location 
             }
             const orderPrefer = await Order.find(preferObj)
             console.log("one",orderPrefer)
