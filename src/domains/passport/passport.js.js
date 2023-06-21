@@ -63,14 +63,14 @@ export const passportCredential = (passport) =>{
 
     passport.serializeUser(function(user,done){
         //it takes the id of the user
-        done(null,user.email)
+        done(null,user.id)
         
     }
     )
     
     passport.deserializeUser(function(user,done){
         //use the id to select the user
-        User.findOne(email,function(req,res){
+        User.findOne(id,function(req,res){
             done(null,user)
         })
     })
