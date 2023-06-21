@@ -39,8 +39,8 @@ export const passportCredential = (passport) =>{
     ));
 
     passport.use(new FacebookStrategy({
-        clientID:'777986900470158',//process.env.FACEBOOK_CLIENT_ID,
-        clientSecret:'bb54f44009ad2e63c5e46a5ddad364b2',//process.env.FACEBOOK_CLIENT_SECRET,
+        clientID:process.env.FACEBOOK_CLIENT_ID,
+        clientSecret:process.env.FACEBOOK_CLIENT_SECRET,
         callbackUrl:'http://localhost:5000/auth/facebook/callback',//'/login/facebook/callback',//process.env.FACEBOOK_CALLBACK_URL,
         profileFields: ['emails','displayName','name','picture']
     }, async function (accessToken,refreshToken,profile,done){
